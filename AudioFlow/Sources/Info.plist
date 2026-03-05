@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>AudioFlow</string>
+    <key>CFBundleDisplayName</key>
+    <string>AudioFlow</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.audioflow.app</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>AudioFlow precisa de acesso ao microfone para transcrever sua voz</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>AudioFlow precisa de acesso ao reconhecimento de voz para transcrever áudio</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+</dict>
+</plist>

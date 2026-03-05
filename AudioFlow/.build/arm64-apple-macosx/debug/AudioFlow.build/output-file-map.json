@@ -1,0 +1,68 @@
+{
+  "": {
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/master.swiftdeps"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/AppDelegate.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppDelegate.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppDelegate.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppDelegate.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppDelegate.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/AppState.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppState.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppState.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppState~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppState.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AppState.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/AudioController.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AudioController.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AudioController.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AudioController~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AudioController.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/AudioController.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/ClipboardService.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/ClipboardService.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/ClipboardService.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/ClipboardService~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/ClipboardService.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/ClipboardService.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/HotkeyController.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/HotkeyController.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/HotkeyController.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/HotkeyController~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/HotkeyController.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/HotkeyController.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/MenuBuilder.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/MenuBuilder.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/MenuBuilder.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/MenuBuilder~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/MenuBuilder.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/MenuBuilder.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/PersistenceService.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/PersistenceService.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/PersistenceService.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/PersistenceService~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/PersistenceService.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/PersistenceService.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/SpeechService.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/SpeechService.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/SpeechService.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/SpeechService~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/SpeechService.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/SpeechService.dia"
+  },
+  "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/Sources/Transcription.swift": {
+    "dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/Transcription.d",
+    "object": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/Transcription.swift.o",
+    "swiftmodule": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/Transcription~partial.swiftmodule",
+    "swift-dependencies": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/Transcription.swiftdeps",
+    "diagnostics": "/Users/lucasboniatti/Desktop/Projetos/audios-mac/AudioFlow/.build/arm64-apple-macosx/debug/AudioFlow.build/Transcription.dia"
+  }
+}
