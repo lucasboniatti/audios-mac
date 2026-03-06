@@ -32,12 +32,12 @@
 | 3.2 | Captura de áudio | AudioController.swift |
 | 3.3 | Transcrição Speech | SpeechService.swift |
 | 3.4 | Clipboard automático | ClipboardService.swift |
+| 4.1 | Histórico de transcrições | HistoryController.swift |
 
 ### Stories Pendentes ⬜
 
 | Story | Título | Prioridade |
 |-------|--------|------------|
-| 4.1 | Histórico de transcrições | SHOULD |
 | 4.2 | Busca no histórico | SHOULD |
 | 5.1 | Export TXT | COULD |
 | 5.2 | Notificações e feedback | COULD |
@@ -56,9 +56,11 @@ AudioFlow/
 │   ├── AppState.swift         # IDLE, RECORDING, PROCESSING
 │   ├── AudioController.swift  # AVAudioEngine
 │   ├── ClipboardService.swift # NSPasteboard
+│   ├── Controllers/
+│   │   └── HistoryController.swift # FIFO 10 itens
 │   ├── HotkeyController.swift # NSEvent global monitor
 │   ├── Info.plist            # LSUIElement, permissões
-│   ├── MenuBuilder.swift     # Menus por estado
+│   ├── MenuBuilder.swift     # Menus por estado + histórico
 │   ├── PersistenceService.swift # CoreData
 │   ├── SpeechService.swift   # SFSpeechRecognizer pt-BR
 │   └── Transcription.swift   # NSManagedObject
@@ -71,7 +73,7 @@ AudioFlow/
 
 ### Para desenvolver a próxima story:
 ```
-/aios-dev *develop 4.1
+/aios-dev *develop 4.2
 ```
 
 ### Para fazer commit:
@@ -106,8 +108,8 @@ Build complete! ✅ No warnings!
 
 ## Próximas Ações Recomendadas
 
-1. **Story 4.1** — Implementar histórico de transcrições (FIFO 10 itens)
-2. **Story 4.2** — Busca no histórico
+1. **Story 4.2** — Implementar busca no histórico
+2. **Story 5.1** — Export TXT
 3. **Commit** das alterações com @devops
 
 ---

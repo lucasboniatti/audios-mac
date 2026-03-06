@@ -285,7 +285,7 @@ extension AppDelegate: SpeechServiceDelegate {
     }
 
     private func saveTranscription(_ text: String) {
-        let _ = PersistenceService.shared.createTranscription(text: text)
+        HistoryController.shared.saveTranscription(text)
         print("Saved to history")
     }
 
@@ -304,5 +304,24 @@ extension AppDelegate: SpeechServiceDelegate {
             trigger: nil
         )
         center.add(request)
+    }
+
+    // MARK: - History Actions
+
+    @objc func copyTranscriptionFromHistory(_ sender: NSMenuItem) {
+        guard let transcription = sender.representedObject as? Transcription else { return }
+        ClipboardService.shared.copy(transcription.text)
+        print("Copied from history: \(transcription.text.prefix(30))...")
+    }
+
+    @objc func clearHistory() {
+        HistoryController.shared.deleteAllTranscriptions()
+        // Refresh menu
+        statusItem?.menu = MenuBuilder.buildMenu(for: stateManager.state, target: self)
+        print("History cleared")
+    }
+
+    @objc func showSearchPanel() {
+        SearchPanelController.shared.showPanel()
     }
 }

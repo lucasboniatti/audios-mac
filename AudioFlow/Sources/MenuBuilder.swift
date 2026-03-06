@@ -37,6 +37,12 @@ class MenuBuilder {
         // Separator
         menu.addItem(NSMenuItem.separator())
 
+        // History submenu
+        buildHistoryMenu(into: menu, target: target)
+
+        // Separator
+        menu.addItem(NSMenuItem.separator())
+
         // About item
         let aboutItem = NSMenuItem(
             title: "Sobre AudioFlow",
@@ -56,6 +62,85 @@ class MenuBuilder {
             keyEquivalent: "q"
         )
         menu.addItem(quitItem)
+    }
+
+    // MARK: - History Menu
+
+    private static func buildHistoryMenu(into menu: NSMenu, target: AnyObject?) {
+        let history = HistoryController.shared.getRecentTranscriptions()
+
+        // History menu item with submenu
+        let historyItem = NSMenuItem(
+            title: "Histórico",
+            action: nil,
+            keyEquivalent: ""
+        )
+
+        let historySubmenu = NSMenu()
+
+        if history.isEmpty {
+            // No transcriptions yet
+            let emptyItem = NSMenuItem(
+                title: "Nenhuma transcrição",
+                action: nil,
+                keyEquivalent: ""
+            )
+            emptyItem.isEnabled = false
+            historySubmenu.addItem(emptyItem)
+        } else {
+            // Add each transcription to submenu
+            for transcription in history {
+                // Create preview (first 30 chars + "...")
+                let preview = transcription.text.count > 30
+                    ? String(transcription.text.prefix(30)) + "..."
+                    : transcription.text
+
+                let item = NSMenuItem(
+                    title: preview,
+                    action: #selector(AppDelegate.copyTranscriptionFromHistory(_:)),
+                    keyEquivalent: ""
+                )
+                item.target = target
+                item.representedObject = transcription
+                item.toolTip = formatTooltip(for: transcription)
+                historySubmenu.addItem(item)
+            }
+
+            // Separator and clear option
+            historySubmenu.addItem(NSMenuItem.separator())
+
+            let clearItem = NSMenuItem(
+                title: "Limpar Histórico",
+                action: #selector(AppDelegate.clearHistory),
+                keyEquivalent: ""
+            )
+            clearItem.target = target
+            historySubmenu.addItem(clearItem)
+        }
+
+        historyItem.submenu = historySubmenu
+        menu.addItem(historyItem)
+
+        // Search item (below history)
+        let searchItem = NSMenuItem(
+            title: "Buscar no Histórico...",
+            action: #selector(AppDelegate.showSearchPanel),
+            keyEquivalent: "f"
+        )
+        searchItem.target = target
+        menu.addItem(searchItem)
+    }
+
+    // MARK: - History Helpers
+
+    private static func formatTooltip(for transcription: Transcription) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "pt_BR")
+
+        let dateString = formatter.string(from: transcription.timestamp)
+        return "\(dateString)\n\nClique para copiar"
     }
 
     // MARK: - RECORDING Menu
