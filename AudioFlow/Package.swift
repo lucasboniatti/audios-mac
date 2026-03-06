@@ -14,6 +14,11 @@ let package = Package(
             name: "AudioFlow",
             path: "Sources",
             exclude: ["Info.plist"]
+        ),
+        .testTarget(
+            name: "AudioFlowTests",
+            dependencies: [],
+            path: "Tests"
         )
     ]
 )
