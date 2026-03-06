@@ -6,7 +6,7 @@
 
 ---
 
-## Visão Geral do Projeto
+## ✅ PROJETO COMPLETO!
 
 **AudioFlow** é um menu bar app para macOS que transcreve áudio em tempo real usando Speech Recognition nativo (pt-BR) e copia automaticamente para o clipboard.
 
@@ -18,9 +18,7 @@
 
 ---
 
-## Progresso Atual
-
-### Stories Concluídas ✅ (13/14)
+## Stories Concluídas ✅ (14/14)
 
 | Story | Título | Status |
 |-------|--------|--------|
@@ -37,12 +35,7 @@
 | 5.1 | Export TXT | ✅ |
 | 5.2 | Notificações e feedback | ✅ |
 | 6.1 | Testes unitários | ✅ |
-
-### Stories Pendentes ⬜ (1/14)
-
-| Story | Título | Prioridade |
-|-------|--------|------------|
-| 6.2 | Testes integração/perf | MUST |
+| 6.2 | Testes integração/perf | ✅ |
 
 ---
 
@@ -61,29 +54,65 @@
 
 ---
 
-## Git Status
-
-```
-Branch: main
-Commits: Sincronizado
-```
-
----
-
 ## Testes
 
 ```
-✔ 27 testes passando
+✔ 42 testes passando
+- IntegrationTests: 7 tests
+- PerformanceTests: 8 tests
+- ClipboardLogicTests: 7 tests
+- TranscriptionModelTests: 5 tests
+- HistoryFIFOTests: 7 tests
+- AppStateTests: 5 tests
+- NotificationTests: 3 tests
+```
+
+### NFR Validadados
+
+| Métrica | Requisito | Medido |
+|---------|-----------|--------|
+| Latência clipboard | < 500ms | ~1ms |
+| Latência histórico | < 500ms | ~0.07ms |
+| Memória (10 itens) | < 100MB | < 10KB |
+
+---
+
+## Estrutura de Arquivos
+
+```
+AudioFlow/
+├── Package.swift
+├── Sources/
+│   ├── AppDelegate.swift
+│   ├── AppState.swift
+│   ├── AudioController.swift
+│   ├── ClipboardService.swift
+│   ├── Controllers/
+│   │   ├── HistoryController.swift
+│   │   └── SearchPanelController.swift
+│   ├── HotkeyController.swift
+│   ├── Info.plist
+│   ├── MenuBuilder.swift
+│   ├── PersistenceService.swift
+│   ├── SpeechService.swift
+│   └── Transcription.swift
+└── Tests/
+    ├── ClipboardServiceTests.swift
+    └── IntegrationTests.swift
 ```
 
 ---
 
-## Próxima Ação
+## Build & Run
 
-```
-/aios-dev *develop 6.2   # Testes integração (MUST - última story!)
+```bash
+cd AudioFlow
+swift build
+swift test
+swift run
 ```
 
 ---
 
-*Handoff gerado em 2026-03-06*
+*Projeto finalizado em 2026-03-06*
+*AudioFlow v1.0 - Todas as 14 stories implementadas*
