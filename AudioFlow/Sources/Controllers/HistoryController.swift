@@ -82,6 +82,33 @@ class HistoryController {
         }
     }
 
+    // MARK: - Export
+
+    /// Export transcriptions to a TXT file
+    /// - Parameter url: The destination URL for the file
+    /// - Throws: Error if writing fails
+    func exportToTXT(to url: URL) throws {
+        let transcriptions = getAllTranscriptions()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "pt_BR")
+
+        var content = "AudioFlow - Histórico de Transcrições\n"
+        content += "Exportado em: \(dateFormatter.string(from: Date()))\n"
+        content += String(repeating: "-", count: 40) + "\n\n"
+
+        // Sort by timestamp descending (newest first)
+        let sorted = transcriptions.sorted { $0.timestamp > $1.timestamp }
+
+        for t in sorted {
+            let timestamp = dateFormatter.string(from: t.timestamp)
+            content += "[\(timestamp)] \(t.text)\n\n"
+        }
+
+        try content.write(to: url, atomically: true, encoding: .utf8)
+        print("HistoryController: Exported \(sorted.count) transcriptions to \(url.path)")
+    }
+
     // MARK: - Private Methods
 
     /// Enforce FIFO limit by removing oldest transcriptions when exceeding maxItems

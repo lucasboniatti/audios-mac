@@ -116,6 +116,15 @@ class MenuBuilder {
             )
             clearItem.target = target
             historySubmenu.addItem(clearItem)
+
+            // Export option
+            let exportItem = NSMenuItem(
+                title: "Exportar TXT...",
+                action: #selector(AppDelegate.exportHistory),
+                keyEquivalent: ""
+            )
+            exportItem.target = target
+            historySubmenu.addItem(exportItem)
         }
 
         historyItem.submenu = historySubmenu

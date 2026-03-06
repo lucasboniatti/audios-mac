@@ -15,6 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let speechService = SpeechService()
     private var currentTranscription = ""
 
+    // Animation
+    private var animationTimer: Timer?
+    private var animationFrame: Int = 0
+
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -182,27 +186,124 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateIcon(for state: AppState) {
         guard let button = statusItem?.button else { return }
 
+        // Stop any existing animation
+        stopAnimation()
+
         switch state {
         case .idle:
-            let icon = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "AudioFlow")
-            icon?.isTemplate = true
+            let icon = createStaticLogo()
+            icon.isTemplate = true
             button.image = icon
             button.contentTintColor = nil
             button.toolTip = "AudioFlow - Pronto para gravar"
 
         case .recording:
-            let icon = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "Gravando")
-            icon?.isTemplate = false
-            button.image = icon
-            button.contentTintColor = .systemRed
+            startAnimation()
             button.toolTip = "AudioFlow - Gravando..."
 
         case .processing:
-            let icon = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: "Processando")
-            icon?.isTemplate = true
+            let icon = createStaticLogo()
+            icon.isTemplate = true
             button.image = icon
             button.toolTip = "AudioFlow - Processando transcrição..."
         }
+    }
+
+    // MARK: - Animation
+
+    private func startAnimation() {
+        animationFrame = 0
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            self?.updateAnimationFrame()
+        }
+    }
+
+    private func stopAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+    }
+
+    private func updateAnimationFrame() {
+        guard let button = statusItem?.button else { return }
+
+        let icon = createAnimatedLogo(frame: animationFrame)
+        icon.isTemplate = false
+        button.image = icon
+        button.contentTintColor = .systemRed
+
+        animationFrame = (animationFrame + 1) % 20
+    }
+
+    private func createStaticLogo() -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size)
+
+        image.lockFocus()
+
+        let bars: [(x: CGFloat, height: CGFloat, width: CGFloat)] = [
+            (9, 14, 2.5),    // center (tallest)
+            (5.5, 9, 2),     // inner left
+            (12.5, 9, 2),    // inner right
+            (2.5, 5.5, 1.8), // middle left
+            (15.5, 5.5, 1.8),// middle right
+            (0.5, 3.5, 1.5), // outer left
+            (17.5, 3.5, 1.5) // outer right
+        ]
+
+        NSColor.black.setFill()
+
+        for bar in bars {
+            let rect = NSRect(
+                x: bar.x - bar.width / 2,
+                y: (size.height - bar.height) / 2,
+                width: bar.width,
+                height: bar.height
+            )
+            let path = NSBezierPath(roundedRect: rect, xRadius: bar.width / 2, yRadius: bar.width / 2)
+            path.fill()
+        }
+
+        image.unlockFocus()
+        return image
+    }
+
+    private func createAnimatedLogo(frame: Int) -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size)
+
+        image.lockFocus()
+
+        // Bar definitions with base height and max height for animation
+        let bars: [(x: CGFloat, baseHeight: CGFloat, maxHeight: CGFloat, width: CGFloat)] = [
+            (9, 14, 16, 2.5),    // center
+            (5.5, 9, 13, 2),     // inner left
+            (12.5, 9, 13, 2),    // inner right
+            (2.5, 5.5, 9, 1.8),  // middle left
+            (15.5, 5.5, 9, 1.8), // middle right
+            (0.5, 3.5, 6, 1.5),  // outer left
+            (17.5, 3.5, 6, 1.5)  // outer right
+        ]
+
+        NSColor.black.setFill()
+
+        for (index, bar) in bars.enumerated() {
+            // Calculate animated height using sine wave
+            let phase = Double(frame) / 20.0 * 2 * .pi + Double(index) * 0.5
+            let heightMultiplier = 0.3 + 0.7 * abs(sin(phase))
+            let currentHeight = bar.baseHeight + (bar.maxHeight - bar.baseHeight) * heightMultiplier
+
+            let rect = NSRect(
+                x: bar.x - bar.width / 2,
+                y: (size.height - currentHeight) / 2,
+                width: bar.width,
+                height: currentHeight
+            )
+            let path = NSBezierPath(roundedRect: rect, xRadius: bar.width / 2, yRadius: bar.width / 2)
+            path.fill()
+        }
+
+        image.unlockFocus()
+        return image
     }
 
     // MARK: - Actions
@@ -319,6 +420,47 @@ extension AppDelegate: SpeechServiceDelegate {
         // Refresh menu
         statusItem?.menu = MenuBuilder.buildMenu(for: stateManager.state, target: self)
         print("History cleared")
+    }
+
+    @objc func exportHistory() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Exportar Histórico"
+        savePanel.nameFieldStringValue = "AudioFlow_Historico.txt"
+        savePanel.allowedContentTypes = [.text]
+        savePanel.canCreateDirectories = true
+
+        savePanel.begin { [weak self] response in
+            guard response == .OK, let url = savePanel.url else { return }
+
+            do {
+                try HistoryController.shared.exportToTXT(to: url)
+                DispatchQueue.main.async {
+                    self?.showExportSuccessNotification(url: url)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self?.showExportError(error: error)
+                }
+            }
+        }
+    }
+
+    private func showExportSuccessNotification(url: URL) {
+        let alert = NSAlert()
+        alert.messageText = "Exportação Concluída"
+        alert.informativeText = "Histórico salvo em:\n\(url.path)"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func showExportError(error: Error) {
+        let alert = NSAlert()
+        alert.messageText = "Erro na Exportação"
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .critical
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     @objc func showSearchPanel() {

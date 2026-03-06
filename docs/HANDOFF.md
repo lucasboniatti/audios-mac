@@ -20,7 +20,7 @@
 
 ## Progresso Atual
 
-### Stories Concluídas ✅ (11/14)
+### Stories Concluídas ✅ (12/14)
 
 | Story | Título | Arquivos |
 |-------|--------|----------|
@@ -34,13 +34,13 @@
 | 3.4 | Clipboard automático | ClipboardService.swift |
 | 4.1 | Histórico de transcrições | HistoryController.swift |
 | 4.2 | Busca no histórico | SearchPanelController.swift |
+| 5.1 | Export TXT | HistoryController.swift (exportToTXT) |
 | 6.1 | Testes unitários | Tests/ClipboardServiceTests.swift (27 tests) |
 
-### Stories Pendentes ⬜ (3/14)
+### Stories Pendentes ⬜ (2/14)
 
 | Story | Título | Prioridade |
 |-------|--------|------------|
-| 5.1 | Export TXT | COULD |
 | 5.2 | Notificações e feedback | COULD |
 | 6.2 | Testes integração/perf | MUST |
 
@@ -57,7 +57,7 @@ AudioFlow/
 │   ├── AudioController.swift       # AVAudioEngine
 │   ├── ClipboardService.swift      # NSPasteboard
 │   ├── Controllers/
-│   │   ├── HistoryController.swift     # FIFO 10 itens
+│   │   ├── HistoryController.swift     # FIFO 10 itens + export TXT
 │   │   └── SearchPanelController.swift # Busca UI
 │   ├── HotkeyController.swift      # NSEvent global monitor
 │   ├── Info.plist                  # LSUIElement, permissões
@@ -76,7 +76,7 @@ AudioFlow/
 
 ```
 Branch: main
-Commits não pushed: 1 (5f42a87)
+Commits não pushed: 3
 ```
 
 ---
@@ -96,20 +96,15 @@ Commits não pushed: 1 (5f42a87)
 
 ## Como Continuar
 
-### Opção 1: Fazer push do commit
+### Opção 1: Fazer push dos commits
 ```
 /aios-devops *push
 ```
 
 ### Opção 2: Desenvolver próxima story
 ```
-/aios-dev *develop 5.1   # Export TXT (COULD)
+/aios-dev *develop 5.2   # Notificações (COULD)
 /aios-dev *develop 6.2   # Testes integração (MUST)
-```
-
-### Opção 3: Ver status
-```
-/aios-master *status
 ```
 
 ---
@@ -135,10 +130,9 @@ Tests: 27 passing ✅
 
 ## Próximas Ações Recomendadas
 
-1. **Commit** — Criar commit para Story 6.1
+1. **Commit** — Criar commit para Story 5.1
 2. **Push** — Enviar commits para remoto (`/aios-devops *push`)
 3. **Story 6.2** — Implementar testes de integração (MUST)
-4. **Story 5.1** — Export TXT (opcional)
 
 ---
 
