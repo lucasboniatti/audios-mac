@@ -127,6 +127,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 try speechService.startRecognition()
                 // Start audio capture
                 try audioController.startRecording()
+                // Play start sound
+                playSound(.start)
                 print("Recording started - Speech recognition active")
             } catch {
                 print("Failed to start recording: \(error)")
@@ -137,6 +139,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case .idle:
             audioController.stopRecording()
             speechService.stopRecognition()
+            // Play stop sound
+            playSound(.stop)
             print("Recording stopped")
 
         case .processing:
@@ -465,5 +469,26 @@ extension AppDelegate: SpeechServiceDelegate {
 
     @objc func showSearchPanel() {
         SearchPanelController.shared.showPanel()
+    }
+
+    // MARK: - Sound Feedback
+
+    private enum SoundType {
+        case start
+        case stop
+    }
+
+    private func playSound(_ type: SoundType) {
+        let soundName: String
+        switch type {
+        case .start:
+            soundName = "Pop"
+        case .stop:
+            soundName = "Morse"
+        }
+
+        guard let sound = NSSound(named: NSSound.Name(soundName)) else { return }
+        sound.volume = 0.5
+        sound.play()
     }
 }

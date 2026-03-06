@@ -20,55 +20,44 @@
 
 ## Progresso Atual
 
-### Stories Concluídas ✅ (12/14)
+### Stories Concluídas ✅ (13/14)
 
-| Story | Título | Arquivos |
-|-------|--------|----------|
-| 1.1 | Criar projeto Xcode | Package.swift, AppDelegate.swift |
-| 1.2 | Configurar CoreData | PersistenceService.swift, Transcription.swift |
-| 2.1 | Menu bar status item | MenuBuilder.swift |
-| 2.2 | Estados do app | AppState.swift |
-| 3.1 | Global hotkey | HotkeyController.swift |
-| 3.2 | Captura de áudio | AudioController.swift |
-| 3.3 | Transcrição Speech | SpeechService.swift |
-| 3.4 | Clipboard automático | ClipboardService.swift |
-| 4.1 | Histórico de transcrições | HistoryController.swift |
-| 4.2 | Busca no histórico | SearchPanelController.swift |
-| 5.1 | Export TXT | HistoryController.swift (exportToTXT) |
-| 6.1 | Testes unitários | Tests/ClipboardServiceTests.swift (27 tests) |
+| Story | Título | Status |
+|-------|--------|--------|
+| 1.1 | Criar projeto Xcode | ✅ |
+| 1.2 | Configurar CoreData | ✅ |
+| 2.1 | Menu bar status item | ✅ |
+| 2.2 | Estados do app | ✅ |
+| 3.1 | Global hotkey | ✅ |
+| 3.2 | Captura de áudio | ✅ |
+| 3.3 | Transcrição Speech | ✅ |
+| 3.4 | Clipboard automático | ✅ |
+| 4.1 | Histórico de transcrições | ✅ |
+| 4.2 | Busca no histórico | ✅ |
+| 5.1 | Export TXT | ✅ |
+| 5.2 | Notificações e feedback | ✅ |
+| 6.1 | Testes unitários | ✅ |
 
-### Stories Pendentes ⬜ (2/14)
+### Stories Pendentes ⬜ (1/14)
 
 | Story | Título | Prioridade |
 |-------|--------|------------|
-| 5.2 | Notificações e feedback | COULD |
 | 6.2 | Testes integração/perf | MUST |
 
 ---
 
-## Estrutura de Arquivos
+## Funcionalidades
 
-```
-AudioFlow/
-├── Package.swift
-├── Sources/
-│   ├── AppDelegate.swift           # Entry point + integração
-│   ├── AppState.swift              # IDLE, RECORDING, PROCESSING
-│   ├── AudioController.swift       # AVAudioEngine
-│   ├── ClipboardService.swift      # NSPasteboard
-│   ├── Controllers/
-│   │   ├── HistoryController.swift     # FIFO 10 itens + export TXT
-│   │   └── SearchPanelController.swift # Busca UI
-│   ├── HotkeyController.swift      # NSEvent global monitor
-│   ├── Info.plist                  # LSUIElement, permissões
-│   ├── MenuBuilder.swift           # Menus por estado + histórico
-│   ├── PersistenceService.swift    # CoreData
-│   ├── SpeechService.swift         # SFSpeechRecognizer pt-BR
-│   └── Transcription.swift         # NSManagedObject
-├── Tests/
-│   └── ClipboardServiceTests.swift # 27 unit tests
-└── .build/
-```
+- **Gravação**: Space para iniciar/parar
+- **Transcrição**: Speech Recognition pt-BR
+- **Clipboard**: Cópia automática
+- **Histórico**: Últimas 10 transcrições (FIFO)
+- **Busca**: Painel de busca no histórico
+- **Export**: Exportar histórico para TXT
+- **Feedback**:
+  - Notificação "Texto copiado"
+  - Ícone animado vermelho durante gravação
+  - Som ao iniciar/parar gravação
 
 ---
 
@@ -76,7 +65,7 @@ AudioFlow/
 
 ```
 Branch: main
-Commits não pushed: 3
+Commits: Sincronizado
 ```
 
 ---
@@ -85,54 +74,15 @@ Commits não pushed: 3
 
 ```
 ✔ 27 testes passando
-- ClipboardLogicTests: 7 tests
-- TranscriptionModelTests: 5 tests
-- HistoryFIFOTests: 7 tests
-- AppStateTests: 5 tests
-- NotificationTests: 3 tests
 ```
 
 ---
 
-## Como Continuar
-
-### Opção 1: Fazer push dos commits
-```
-/aios-devops *push
-```
-
-### Opção 2: Desenvolver próxima story
-```
-/aios-dev *develop 5.2   # Notificações (COULD)
-/aios-dev *develop 6.2   # Testes integração (MUST)
-```
-
----
-
-## Documentação do Projeto
-
-- `docs/prd/requirements.json` — Requisitos
-- `docs/prd/spec.md` — Especificação técnica
-- `docs/prd/implementation.yaml` — Plano de implementação
-- `docs/epics/EPIC-001-AudioFlow.md` — Epic principal
-- `docs/stories/*.story.md` — Stories individuais
-
----
-
-## Build Status
+## Próxima Ação
 
 ```
-Build complete! ✅ No warnings!
-Tests: 27 passing ✅
+/aios-dev *develop 6.2   # Testes integração (MUST - última story!)
 ```
-
----
-
-## Próximas Ações Recomendadas
-
-1. **Commit** — Criar commit para Story 5.1
-2. **Push** — Enviar commits para remoto (`/aios-devops *push`)
-3. **Story 6.2** — Implementar testes de integração (MUST)
 
 ---
 
