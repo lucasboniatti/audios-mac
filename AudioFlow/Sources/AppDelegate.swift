@@ -1,9 +1,7 @@
 import Cocoa
 import Combine
 import Speech
-import UserNotifications
 
-@main
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Properties
@@ -13,22 +11,53 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyController: HotkeyController?
     private let audioController = AudioController()
     private let speechService = SpeechService()
+    private let autoPasteService = AutoPasteService()
+    private let notificationService = NotificationService()
+    private let transcriptionCommitCoordinator = TranscriptionCommitCoordinator()
     private var currentTranscription = ""
+
+    // Debug file
+    private static let debugLogPath = "/tmp/audioflow_debug.log"
 
     // Animation
     private var animationTimer: Timer?
     private var animationFrame: Int = 0
+    // Processing timeout
+    private var processingTimeoutTimer: Timer?
 
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        logDebug("Application did finish launching")
         setupStatusBar()
         setupStateObserver()
         setupHotkey()
         setupSpeechService()
         setupAudioObserver()
+        logDebug("AudioFlow setup complete")
         print("AudioFlow started - Menu bar icon active")
-        print("Press Space to start/stop recording")
+        print("Press \(HotkeyConfiguration.displayName) to start/stop recording")
+    }
+
+    private func logDebug(_ message: String) {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let logMessage = "[\(timestamp)] \(message)\n"
+        NSLog("%@", "[AudioFlow] \(message)")
+        print(logMessage, terminator: "")
+        fflush(stdout)
+        
+        // Also write to file
+        let filePath = Self.debugLogPath
+        if let data = logMessage.data(using: .utf8) {
+            if FileManager.default.fileExists(atPath: filePath) {
+                let handle = try! FileHandle(forWritingTo: URL(fileURLWithPath: filePath))
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            } else {
+                try? logMessage.write(toFile: filePath, atomically: true, encoding: .utf8)
+            }
+        }
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -45,14 +74,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Status Bar Setup
 
     private func setupStatusBar() {
-        // Create status item with square length (standard icon size)
+        logDebug("Setting up status bar...")
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
-        // Configure initial icon
-        updateIcon(for: stateManager.state)
+        guard let button = statusItem?.button else {
+            logDebug("ERROR: Status item button could not be created")
+            return
+        }
 
-        // Set initial menu
+        button.action = #selector(toggleRecording)
+        button.target = self
         statusItem?.menu = MenuBuilder.buildMenu(for: stateManager.state, target: self)
+        updateIcon(for: stateManager.state)
+        logDebug("Status item created successfully")
     }
 
     // MARK: - State Observer
@@ -66,17 +100,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
     }
 
-    private func handleStateChange(_ newState: AppState) {
+    private func handleStateChange(_ state: AppState) {
+        logDebug("handleStateChange: \(state)")
+        
         // Update icon
-        updateIcon(for: newState)
+        updateIcon(for: state)
 
         // Update menu
-        statusItem?.menu = MenuBuilder.buildMenu(for: newState, target: self)
+        statusItem?.menu = MenuBuilder.buildMenu(for: state, target: self)
 
         // Handle audio recording based on state
-        handleAudioState(newState)
+        handleAudioStateChange(state)
 
-        print("UI updated for state: \(newState.description)")
+        logDebug("UI updated for state: \(state.description)")
     }
 
     // MARK: - Hotkey Setup
@@ -118,10 +154,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Audio State Management
 
-    private func handleAudioState(_ state: AppState) {
+    private func handleAudioStateChange(_ state: AppState) {
+        logDebug("handleAudioStateChange: \(state)")
+        
         switch state {
         case .recording:
             currentTranscription = ""
+            transcriptionCommitCoordinator.beginSession()
             do {
                 // Start speech recognition
                 try speechService.startRecognition()
@@ -129,9 +168,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 try audioController.startRecording()
                 // Play start sound
                 playSound(.start)
-                print("Recording started - Speech recognition active")
+                logDebug("Recording started")
             } catch {
-                print("Failed to start recording: \(error)")
+                logDebug("Failed to start recording: \(error)")
                 showAudioError(error)
                 _ = stateManager.transition(to: .idle)
             }
@@ -141,12 +180,79 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             speechService.stopRecognition()
             // Play stop sound
             playSound(.stop)
-            print("Recording stopped")
+            logDebug("Recording stopped")
 
         case .processing:
             audioController.stopRecording()
-            // Speech recognition will stop automatically when final result received
-            print("Processing transcription")
+            speechService.forceEndAudio()
+            
+            logDebug("Processing - waiting for final result")
+            
+            // Timeout - if no result after 3 seconds, use partial
+            processingTimeoutTimer?.invalidate()
+            processingTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                if let text = self.transcriptionCommitCoordinator.commitFromTimeout() {
+                    self.commitProcessedTranscription(text, source: "timeout")
+                } else {
+                    self.logDebug("Timeout reached with no transcription to commit")
+                    self.completeProcessingIfNeeded()
+                }
+            }
+        }
+    }
+    
+    private func commitProcessedTranscription(_ text: String, source: String) {
+        // Cancel timeout
+        processingTimeoutTimer?.invalidate()
+        processingTimeoutTimer = nil
+
+        let normalizedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedText.isEmpty else {
+            logDebug("Ignoring empty transcription from \(source)")
+            completeProcessingIfNeeded()
+            return
+        }
+
+        // Copy to clipboard
+        currentTranscription = normalizedText
+        copyToClipboard(normalizedText)
+
+        // Save to history
+        saveTranscription(normalizedText)
+
+        // Try to paste into the focused field as if the user pressed Cmd+V
+        triggerAutoPaste()
+        
+        // Return to idle
+        showCopiedNotification()
+        logDebug("Committed transcription (\(source)): \(normalizedText)")
+        completeProcessingIfNeeded()
+    }
+
+    private func completeProcessingIfNeeded() {
+        switch stateManager.state {
+        case .processing:
+            _ = stateManager.completeProcessing()
+        case .recording:
+            _ = stateManager.transition(to: .idle)
+        case .idle:
+            break
+        }
+    }
+
+    private func isExpectedCancellationError(_ error: NSError) -> Bool {
+        error.domain == "kLSRErrorDomain" && [216, 301].contains(error.code)
+    }
+    
+    private func triggerAutoPaste() {
+        logDebug("Attempting automatic paste from latest clipboard contents")
+
+        switch autoPasteService.pasteLatestClipboardContents() {
+        case .pasted:
+            logDebug("Auto-paste shortcut dispatched")
+        case .permissionRequired:
+            logDebug("Auto-paste requires Accessibility permission")
         }
     }
 
@@ -188,28 +294,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Icon Management
 
     private func updateIcon(for state: AppState) {
-        guard let button = statusItem?.button else { return }
+        logDebug("updateIcon called for state: \(state)")
+        
+        guard let button = statusItem?.button else {
+            logDebug("ERROR: No button found")
+            return
+        }
 
         // Stop any existing animation
         stopAnimation()
 
         switch state {
         case .idle:
+            logDebug("Setting idle icon")
             let icon = createStaticLogo()
             icon.isTemplate = true
             button.image = icon
+            button.imagePosition = .imageOnly
+            button.title = ""
             button.contentTintColor = nil
+            button.appearsDisabled = false
             button.toolTip = "AudioFlow - Pronto para gravar"
+            logDebug("Idle icon set")
 
         case .recording:
-            startAnimation()
+            logDebug("Setting recording icon")
+            button.title = ""
+            button.imagePosition = .imageOnly
+            button.contentTintColor = nil
+            button.appearsDisabled = false
             button.toolTip = "AudioFlow - Gravando..."
+            logDebug("Recording icon set, starting animation")
+            startAnimation()
 
         case .processing:
+            logDebug("Setting processing icon")
             let icon = createStaticLogo()
             icon.isTemplate = true
             button.image = icon
+            button.imagePosition = .imageOnly
+            button.title = ""
+            button.contentTintColor = nil
+            button.appearsDisabled = false
             button.toolTip = "AudioFlow - Processando transcrição..."
+            logDebug("Processing icon set")
         }
     }
 
@@ -233,7 +361,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let icon = createAnimatedLogo(frame: animationFrame)
         icon.isTemplate = false
         button.image = icon
-        button.contentTintColor = .systemRed
+        button.imagePosition = .imageOnly
+        button.title = ""
+        button.contentTintColor = nil
 
         animationFrame = (animationFrame + 1) % 20
     }
@@ -244,6 +374,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         image.lockFocus()
 
+        // Use black for template - will be rendered correctly by macOS
+        NSColor.black.setFill()
+
         let bars: [(x: CGFloat, height: CGFloat, width: CGFloat)] = [
             (9, 14, 2.5),    // center (tallest)
             (5.5, 9, 2),     // inner left
@@ -253,8 +386,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (0.5, 3.5, 1.5), // outer left
             (17.5, 3.5, 1.5) // outer right
         ]
-
-        NSColor.black.setFill()
 
         for bar in bars {
             let rect = NSRect(
@@ -277,6 +408,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         image.lockFocus()
 
+        // Use RED for recording state directly
+        NSColor.systemRed.setFill()
+
         // Bar definitions with base height and max height for animation
         let bars: [(x: CGFloat, baseHeight: CGFloat, maxHeight: CGFloat, width: CGFloat)] = [
             (9, 14, 16, 2.5),    // center
@@ -287,8 +421,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (0.5, 3.5, 6, 1.5),  // outer left
             (17.5, 3.5, 6, 1.5)  // outer right
         ]
-
-        NSColor.black.setFill()
 
         for (index, bar) in bars.enumerated() {
             // Calculate animated height using sine wave
@@ -307,28 +439,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         image.unlockFocus()
+        
+        // Ensure proper scaling for retina
+        image.size = size
         return image
     }
 
     // MARK: - Actions
 
     @objc func toggleRecording() {
+        logDebug("toggleRecording called, current state: \(stateManager.state)")
+        
         switch stateManager.state {
         case .idle:
+            logDebug("Starting recording...")
             _ = stateManager.startRecording()
 
         case .recording:
+            logDebug("Stopping recording, transitioning to processing...")
             _ = stateManager.stopRecording(partialText: currentTranscription)
 
         case .processing:
+            logDebug("Currently processing, ignoring toggle")
             break
         }
     }
 
     @objc func cancelOperation() {
+        processingTimeoutTimer?.invalidate()
+        processingTimeoutTimer = nil
         speechService.stopRecognition()
         audioController.stopRecording()
         stateManager.cancel()
+        transcriptionCommitCoordinator.beginSession()
         currentTranscription = ""
     }
 }
@@ -338,49 +481,79 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: SpeechServiceDelegate {
 
     func speechService(_ service: SpeechService, didReceivePartialResult text: String) {
-        currentTranscription = text
-        stateManager.updatePartialText(text)
-        print("Partial: \(text)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            guard !self.transcriptionCommitCoordinator.hasCommittedText else {
+                self.logDebug("Ignoring late partial result after commit: \(text)")
+                return
+            }
+
+            self.logDebug("Partial result: \(text)")
+            self.currentTranscription = text
+            self.transcriptionCommitCoordinator.updatePartialText(text)
+            self.stateManager.updatePartialText(text)
+        }
     }
 
     func speechService(_ service: SpeechService, didReceiveFinalResult text: String) {
-        currentTranscription = text
-        print("Final: \(text)")
-
-        // Copy to clipboard
-        copyToClipboard(text)
-
-        // Save to history
-        saveTranscription(text)
-
-        // Return to idle
         DispatchQueue.main.async { [weak self] in
-            _ = self?.stateManager.completeProcessing()
-            self?.showCopiedNotification()
+            guard let self = self else { return }
+
+            self.logDebug("Final result: \(text)")
+
+            if let committedText = self.transcriptionCommitCoordinator.commitFromFinal(text) {
+                self.commitProcessedTranscription(committedText, source: "final")
+                return
+            }
+
+            if self.transcriptionCommitCoordinator.hasCommittedText {
+                self.logDebug("Ignoring final result because a transcription was already committed")
+            } else {
+                self.logDebug("Ignoring empty final result with no transcription to commit")
+                self.completeProcessingIfNeeded()
+            }
         }
     }
 
     func speechService(_ service: SpeechService, didFailWithError error: Error) {
-        print("Speech error: \(error)")
-        // Don't show error for cancellation
-        let nsError = error as NSError
-        if nsError.domain == "kLSRErrorDomain" && nsError.code == 216 {
-            return
-        }
-
         DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            self.logDebug("Speech error: \(error)")
+            
+            // Cancel timeout
+            self.processingTimeoutTimer?.invalidate()
+            self.processingTimeoutTimer = nil
+            
+            // Don't show error for expected cancellation when we already have the result
+            let nsError = error as NSError
+            if self.isExpectedCancellationError(nsError) {
+                self.logDebug("Ignoring expected speech cancellation: \(nsError.code)")
+                return
+            }
+
+            // Handle "no speech detected" - use partial if available
+            if nsError.domain == "kAFAssistantErrorDomain" {
+                if let text = self.transcriptionCommitCoordinator.commitFromErrorFallback() {
+                    self.commitProcessedTranscription(text, source: "error-fallback")
+                } else {
+                    self.completeProcessingIfNeeded()
+                }
+                return
+            }
+
             let alert = NSAlert()
             alert.messageText = "Erro de Transcrição"
             alert.informativeText = error.localizedDescription
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
             alert.runModal()
-            _ = self?.stateManager.transition(to: .idle)
+            self.completeProcessingIfNeeded()
         }
     }
 
     func speechServiceDidChangeAvailability(_ service: SpeechService, isAvailable: Bool) {
-        print("Speech recognition available: \(isAvailable)")
+        logDebug("Speech recognition available: \(isAvailable)")
     }
 
     // MARK: - Helper Methods
@@ -395,20 +568,12 @@ extension AppDelegate: SpeechServiceDelegate {
     }
 
     private func showCopiedNotification() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
-
-        let content = UNMutableNotificationContent()
-        content.title = "AudioFlow"
-        content.body = "Texto copiado para o clipboard!"
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-        center.add(request)
+        switch notificationService.showCopiedNotification() {
+        case .dispatched:
+            logDebug("Copied notification dispatched")
+        case .unavailable:
+            logDebug("Skipping copied notification because AudioFlow is not running from an app bundle")
+        }
     }
 
     // MARK: - History Actions
@@ -424,6 +589,15 @@ extension AppDelegate: SpeechServiceDelegate {
         // Refresh menu
         statusItem?.menu = MenuBuilder.buildMenu(for: stateManager.state, target: self)
         print("History cleared")
+    }
+
+    // MARK: - Login Item Actions
+
+    @objc func toggleStartAtLogin() {
+        let isEnabled = LoginItemService.shared.toggle()
+        logDebug("Start at login: \(isEnabled ? "enabled" : "disabled")")
+        // Refresh menu to show new state
+        statusItem?.menu = MenuBuilder.buildMenu(for: stateManager.state, target: self)
     }
 
     @objc func exportHistory() {

@@ -122,7 +122,12 @@ class SpeechService: NSObject {
     /// Append audio buffer to recognition request
     /// - Parameter buffer: Audio buffer from microphone
     func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        recognitionRequest?.append(buffer)
+        if recognitionRequest != nil {
+            recognitionRequest?.append(buffer)
+            print("Speech: audio buffer appended, frames: \(buffer.frameLength)")
+        } else {
+            print("WARNING: recognitionRequest is nil")
+        }
     }
 
     /// Stop speech recognition
@@ -132,6 +137,12 @@ class SpeechService: NSObject {
         recognitionTask = nil
         recognitionRequest = nil
         print("Speech recognition stopped")
+    }
+    
+    /// Force end audio without stopping the task completely
+    func forceEndAudio() {
+        recognitionRequest?.endAudio()
+        print("Audio input ended, waiting for final result")
     }
 
     // MARK: - Private Methods

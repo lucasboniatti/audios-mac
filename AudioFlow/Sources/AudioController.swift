@@ -29,6 +29,35 @@ class AudioController {
             return
         }
 
+        // Request microphone permission first
+        AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+            if !granted {
+                print("Microphone permission denied")
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .audioRecordingError,
+                        object: nil,
+                        userInfo: ["error": AudioError.permissionDenied]
+                    )
+                }
+                return
+            }
+            print("Microphone permission granted")
+            DispatchQueue.main.async {
+                do {
+                    try self?.startRecordingInternal()
+                } catch {
+                    NotificationCenter.default.post(
+                        name: .audioRecordingError,
+                        object: nil,
+                        userInfo: ["error": error]
+                    )
+                }
+            }
+        }
+    }
+    
+    private func startRecordingInternal() throws {
         // Create audio engine
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
@@ -92,6 +121,8 @@ class AudioController {
             object: nil,
             userInfo: ["buffer": buffer, "time": time]
         )
+        // Log every buffer to debug
+        print("Audio buffer: \(buffer.frameLength) frames at \(time.sampleTime)")
     }
 }
 

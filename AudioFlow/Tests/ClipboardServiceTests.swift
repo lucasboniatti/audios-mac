@@ -189,12 +189,17 @@ final class TranscriptionModelTests: XCTestCase {
 final class TestHistoryManager {
     private(set) var items: [TestTranscription] = []
     private let maxItems: Int
+    private let lock = NSLock()
 
     init(maxItems: Int = 10) {
         self.maxItems = maxItems
     }
 
+    @discardableResult
     func add(_ text: String) -> TestTranscription {
+        lock.lock()
+        defer { lock.unlock() }
+
         let transcription = TestTranscription(text: text)
 
         // Remove oldest if at capacity
@@ -207,14 +212,20 @@ final class TestHistoryManager {
     }
 
     func getAll() -> [TestTranscription] {
+        lock.lock()
+        defer { lock.unlock() }
         return items
     }
 
     func clear() {
+        lock.lock()
+        defer { lock.unlock() }
         items.removeAll()
     }
 
     func search(query: String) -> [TestTranscription] {
+        lock.lock()
+        defer { lock.unlock() }
         return items.filter { $0.text.localizedCaseInsensitiveContains(query) }
     }
 }

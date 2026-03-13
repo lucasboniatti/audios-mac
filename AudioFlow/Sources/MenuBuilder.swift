@@ -27,10 +27,11 @@ class MenuBuilder {
     private static func buildIdleMenu(_ menu: NSMenu, target: AnyObject?) {
         // Record item
         let recordItem = NSMenuItem(
-            title: "Gravar (Space)",
+            title: "Gravar",
             action: #selector(AppDelegate.toggleRecording),
-            keyEquivalent: ""
+            keyEquivalent: HotkeyConfiguration.menuKeyEquivalent
         )
+        recordItem.keyEquivalentModifierMask = HotkeyConfiguration.menuModifiers
         recordItem.target = target
         menu.addItem(recordItem)
 
@@ -51,6 +52,18 @@ class MenuBuilder {
         )
         aboutItem.target = MenuBuilder.self
         menu.addItem(aboutItem)
+
+        // Start at login item
+        let startAtLoginItem = NSMenuItem(
+            title: "Iniciar ao Ligar",
+            action: #selector(AppDelegate.toggleStartAtLogin),
+            keyEquivalent: ""
+        )
+        startAtLoginItem.target = target
+        if LoginItemService.shared.isEnabled {
+            startAtLoginItem.state = .on
+        }
+        menu.addItem(startAtLoginItem)
 
         // Separator
         menu.addItem(NSMenuItem.separator())
@@ -157,10 +170,11 @@ class MenuBuilder {
     private static func buildRecordingMenu(_ menu: NSMenu, target: AnyObject?) {
         // Stop item
         let stopItem = NSMenuItem(
-            title: "Parar Gravação (Space)",
+            title: "Parar Gravação",
             action: #selector(AppDelegate.toggleRecording),
-            keyEquivalent: ""
+            keyEquivalent: HotkeyConfiguration.menuKeyEquivalent
         )
+        stopItem.keyEquivalentModifierMask = HotkeyConfiguration.menuModifiers
         stopItem.target = target
         menu.addItem(stopItem)
 

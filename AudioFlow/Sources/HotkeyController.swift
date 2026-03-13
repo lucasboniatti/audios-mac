@@ -1,17 +1,37 @@
 import Cocoa
+import Carbon.HIToolbox
+
+struct HotkeyConfiguration {
+
+    static let displayName = "Control+A"
+    static let menuKeyEquivalent = "a"
+    static let menuModifiers: NSEvent.ModifierFlags = [.control]
+    static let carbonKeyCode = UInt32(kVK_ANSI_A)
+    static let carbonModifiers = UInt32(controlKey)
+    static let identifier: UInt32 = 1
+    static let signature = fourCharCode("AFHK")
+
+    private static func fourCharCode(_ string: String) -> OSType {
+        string.unicodeScalars.reduce(0) { partialResult, scalar in
+            (partialResult << 8) + OSType(scalar.value)
+        }
+    }
+}
+
+private let hotKeyEventHandler: EventHandlerUPP = { _, event, userData in
+    guard let event, let userData else { return noErr }
+    let controller = Unmanaged<HotkeyController>.fromOpaque(userData).takeUnretainedValue()
+    controller.handleHotKeyEvent(event)
+    return noErr
+}
 
 /// Controller for managing global keyboard shortcuts
 class HotkeyController {
 
-    // MARK: - Constants
-
-    /// Space key code
-    private static let spaceKeyCode: UInt16 = 49
-
     // MARK: - Properties
 
-    private var globalMonitor: Any?
-    private var localMonitor: Any?
+    private var eventHandlerRef: EventHandlerRef?
+    private var hotKeyRef: EventHotKeyRef?
     private let onToggle: () -> Void
 
     // MARK: - Initialization
@@ -28,36 +48,66 @@ class HotkeyController {
 
     /// Start monitoring for global hotkey
     func start() {
-        // Check Accessibility permission
-        guard checkAccessibilityPermission() else {
-            showAccessibilityAlert()
+        stop()
+        print("HotkeyController start() called")
+
+        var eventType = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard),
+            eventKind: UInt32(kEventHotKeyPressed)
+        )
+
+        let installStatus = InstallEventHandler(
+            GetApplicationEventTarget(),
+            hotKeyEventHandler,
+            1,
+            &eventType,
+            Unmanaged.passUnretained(self).toOpaque(),
+            &eventHandlerRef
+        )
+
+        guard installStatus == noErr else {
+            print("Failed to install hotkey event handler: \(installStatus)")
+            showRegistrationAlert()
             return
         }
 
-        // Global monitor (works when app is not in focus)
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyEvent(event)
+        let hotKeyID = EventHotKeyID(
+            signature: HotkeyConfiguration.signature,
+            id: HotkeyConfiguration.identifier
+        )
+
+        let registrationStatus = RegisterEventHotKey(
+            HotkeyConfiguration.carbonKeyCode,
+            HotkeyConfiguration.carbonModifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &hotKeyRef
+        )
+
+        guard registrationStatus == noErr else {
+            print("Failed to register global hotkey: \(registrationStatus)")
+            if let eventHandlerRef {
+                RemoveEventHandler(eventHandlerRef)
+                self.eventHandlerRef = nil
+            }
+            showRegistrationAlert()
+            return
         }
 
-        // Local monitor (works when app is in focus)
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyEvent(event)
-            return event
-        }
-
-        print("HotkeyController started - listening for Space key")
+        print("HotkeyController started - listening for \(HotkeyConfiguration.displayName)")
     }
 
     /// Stop monitoring for hotkey
     func stop() {
-        if let monitor = globalMonitor {
-            NSEvent.removeMonitor(monitor)
-            globalMonitor = nil
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
         }
 
-        if let monitor = localMonitor {
-            NSEvent.removeMonitor(monitor)
-            localMonitor = nil
+        if let eventHandlerRef {
+            RemoveEventHandler(eventHandlerRef)
+            self.eventHandlerRef = nil
         }
 
         print("HotkeyController stopped")
@@ -65,46 +115,46 @@ class HotkeyController {
 
     // MARK: - Private Methods
 
-    private func handleKeyEvent(_ event: NSEvent) {
-        // Check if Space key was pressed
-        if event.keyCode == Self.spaceKeyCode {
-            // Only trigger if no modifier keys are pressed (pure Space)
-            if event.modifierFlags.isEmpty {
-                print("Space key detected - triggering toggle")
-                onToggle()
-            }
+    fileprivate func handleHotKeyEvent(_ event: EventRef) {
+        var hotKeyID = EventHotKeyID()
+        let status = GetEventParameter(
+            event,
+            EventParamName(kEventParamDirectObject),
+            EventParamType(typeEventHotKeyID),
+            nil,
+            MemoryLayout<EventHotKeyID>.size,
+            nil,
+            &hotKeyID
+        )
+
+        guard status == noErr else {
+            print("Failed to inspect hotkey event: \(status)")
+            return
+        }
+
+        guard hotKeyID.signature == HotkeyConfiguration.signature,
+              hotKeyID.id == HotkeyConfiguration.identifier else {
+            return
+        }
+
+        print("\(HotkeyConfiguration.displayName) detected - triggering toggle")
+        DispatchQueue.main.async {
+            self.onToggle()
         }
     }
 
-    private func checkAccessibilityPermission() -> Bool {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
-        return AXIsProcessTrustedWithOptions(options)
-    }
-
-    private func showAccessibilityAlert() {
+    private func showRegistrationAlert() {
         DispatchQueue.main.async {
             let alert = NSAlert()
-            alert.messageText = "Permissão Necessária"
+            alert.messageText = "Atalho Indisponível"
             alert.informativeText = """
-            AudioFlow precisa de permissão de Accessibility para detectar o hotkey global (Space).
+            Não foi possível registrar o atalho global \(HotkeyConfiguration.displayName).
 
-            Como habilitar:
-            1. Abra System Preferences
-            2. Vá em Privacy & Security > Accessibility
-            3. Adicione AudioFlow à lista
-
-            Após habilitar, reinicie o aplicativo.
+            Esse atalho pode estar reservado pelo sistema ou em uso por outro app.
             """
             alert.alertStyle = .warning
-            alert.addButton(withTitle: "Abrir Preferências")
-            alert.addButton(withTitle: "Cancelar")
-
-            if alert.runModal() == .alertFirstButtonReturn {
-                // Open System Preferences to Accessibility
-                NSWorkspace.shared.open(
-                    URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                )
-            }
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
         }
     }
 }
