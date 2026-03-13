@@ -2,36 +2,45 @@
 
 # Build script para criar o aplicativo AudioFlow como um bundle completo
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
+
+APP_NAME="AudioFlow"
+BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-release}"
+BUILD_ARCH="${BUILD_ARCH:-$(uname -m)}"
+DIST_DIR="${DIST_DIR:-${SCRIPT_DIR}/dist}"
+BUNDLE_DIR="${DIST_DIR}/${APP_NAME}.app"
+ZIP_PATH="${DIST_DIR}/${APP_NAME}.zip"
+SKIP_OPEN="${SKIP_OPEN:-0}"
+PACKAGE_RELEASE_ZIP="${PACKAGE_RELEASE_ZIP:-1}"
+BUILD_PRODUCTS_DIR="AudioFlow/.build/${BUILD_ARCH}-apple-macosx/${BUILD_CONFIGURATION}"
+EXECUTABLE_PATH="${BUILD_PRODUCTS_DIR}/${APP_NAME}"
 
 echo "========================================"
 echo "  AudioFlow Build Script"
 echo "========================================"
 
 # Build com Swift Package Manager
-echo "[1/4] Compilando..."
+echo "[1/5] Compilando (${BUILD_CONFIGURATION}/${BUILD_ARCH})..."
 cd AudioFlow
-swift build --configuration release --arch arm64
-
-if [ $? -ne 0 ]; then
-    echo "Erro na compilação"
-    exit 1
-fi
+swift build --configuration "${BUILD_CONFIGURATION}" --arch "${BUILD_ARCH}"
 cd ..
 
 # Criar estrutura do bundle do aplicativo
-echo "[2/4] Criando bundle..."
-APP_NAME="AudioFlow"
-BUNDLE_DIR="./dist/${APP_NAME}.app"
-rm -rf "${BUNDLE_DIR}"
+echo "[2/5] Criando bundle..."
+if [ ! -f "${EXECUTABLE_PATH}" ]; then
+    echo "Erro: executavel nao encontrado em ${EXECUTABLE_PATH}"
+    exit 1
+fi
+
+rm -rf "${BUNDLE_DIR}" "${ZIP_PATH}"
 mkdir -p "${BUNDLE_DIR}/Contents/MacOS"
 mkdir -p "${BUNDLE_DIR}/Contents/Resources"
 
 # Copiar o executável - caminho correto do SPM
-cp "AudioFlow/.build/arm64-apple-macosx/release/${APP_NAME}" "${BUNDLE_DIR}/Contents/MacOS/${APP_NAME}"
+cp "${EXECUTABLE_PATH}" "${BUNDLE_DIR}/Contents/MacOS/${APP_NAME}"
 chmod +x "${BUNDLE_DIR}/Contents/MacOS/${APP_NAME}"
 
 # Criar o Info.plist correto
@@ -73,7 +82,7 @@ cat > "${BUNDLE_DIR}/Contents/Info.plist" << 'EOF'
 EOF
 
 # Criar ícone do app (AppIcon.icns)
-echo "[2.5/4] Criando ícone do app..."
+echo "[3/5] Criando icone do app..."
 ICONSET_DIR="./AudioFlow/Resources/AppIcon.iconset"
 mkdir -p "$ICONSET_DIR"
 
@@ -190,11 +199,23 @@ cat > "${BUNDLE_DIR}/Contents/Resources/AudioFlow.entitlements" << 'EOF'
 </plist>
 EOF
 
-echo "[3/4] Aplicativo criado em: ${BUNDLE_DIR}"
+echo "[4/5] Aplicativo criado em: ${BUNDLE_DIR}"
 
-# Abrir o aplicativo
-echo "[4/4] Abrindo AudioFlow..."
-open "${BUNDLE_DIR}"
+if [ "${PACKAGE_RELEASE_ZIP}" = "1" ]; then
+    echo "[5/5] Empacotando ${APP_NAME}.zip..."
+    mkdir -p "${DIST_DIR}"
+    ditto -c -k --sequesterRsrc --keepParent "${BUNDLE_DIR}" "${ZIP_PATH}"
+    echo "Arquivo de release criado em: ${ZIP_PATH}"
+else
+    echo "[5/5] Empacotamento zip desabilitado"
+fi
+
+if [ "${SKIP_OPEN}" = "1" ]; then
+    echo "SKIP_OPEN=1; pulando abertura automatica do app."
+else
+    echo "Abrindo AudioFlow..."
+    open "${BUNDLE_DIR}"
+fi
 
 echo ""
 echo "========================================"
@@ -203,6 +224,9 @@ echo "========================================"
 echo ""
 echo "O ícone deve aparecer no menu bar (canto superior direito)"
 echo "Pressione CONTROL+A para iniciar/parar gravação"
+if [ "${PACKAGE_RELEASE_ZIP}" = "1" ]; then
+    echo "Asset para GitHub Release: ${ZIP_PATH}"
+fi
 echo ""
 echo "IMPORTANTE: Permissões necessárias:"
 echo "  1. System Preferences > Privacy & Security > Microphone"
