@@ -1,0 +1,186 @@
+{
+  "project": "AudioFlow",
+  "research_date": "2026-03-05",
+  "topics": {
+    "menu_bar_app": {
+      "summary": "NSStatusItem é a forma padrão de criar menu bar apps no macOS",
+      "approach": "Usar AppDelegate com NSStatusBar.system para criar status item",
+      "key_apis": [
+        "NSStatusBar.system",
+        "NSStatusItem",
+        "NSStatusBarButton",
+        "NSMenu"
+      ],
+      "implementation": {
+        "swift_ui": false,
+        "reason": "SwiftUI não tem suporte nativo completo para menu bar apps sem janela. Usar AppDelegate com AppKit."
+      },
+      "code_pattern": {
+        "create_status_item": "let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)",
+        "configure_button": "statusItem.button?.image = NSImage(systemSymbolName: \"mic.fill\", accessibilityDescription: \"AudioFlow\")",
+        "add_menu": "statusItem.menu = NSMenu()"
+      },
+      "sources": [
+        "https://developer.apple.com/documentation/appkit/nsstatusitem",
+        "https://developer.apple.com/documentation/appkit/nsstatusbar"
+      ]
+    },
+    "global_hotkey": {
+      "summary": "Fn key é uma tecla especial que requer tratamento específico no macOS",
+      " "challenge": "Fn + Espaço não é detectável diretamente via NSEvent.globalMonitor em todos os casos",
+      "approaches": [
+        {
+          "method": "NSEvent.addGlobalMonitorForEvents",
+          "pros": ["API nativa", "Sem dependências externas"],
+          "cons": ["Não funciona quando app não tem foco", "Fn key pode não ser detectada"],
+          "suitable": false
+        },
+        {
+          "method": "Carbon API (RegisterEventHotKey)",
+          "pros": ["Funciona globalmente", "Detecta combinações com Fn"],
+          "cons": ["API legacy (Carbon)", "Requer bridging header"],
+          "suitable": true,
+          "recommended": true
+        },
+        {
+          "method": "Shortcut (macOS Monterey+)",
+          "pros": ["API moderna", "Integração com System Preferences"],
+          "cons": ["Requer macOS 12+", "Usuário precisa configurar manualmente"],
+          "suitable": false,
+          "notes": "Reserva para versão futura com atalhos customizáveis"
+        }
+      ],
+      "recommended_approach": "Carbon API (RegisterEventHotKey) para Fn + Espaço global",
+      "alternative": "Se Fn não funcionar, usar Cmd+Shift+Space ou outra combinação padrão",
+      "code_pattern": {
+        "carbon_hotkey": "RegisterEventHotKey(UInt32(kVK_Space), UInt32(controlKey | cmdKey), hotKeyID, GetEventDispatcherTarget(), nil, &hotKeyRef)"
+      },
+      "sources": [
+        "https://developer.apple.com/documentation/appkit/nsevent"
+      ],
+      "notes": "Fn key no macOS é tratada no nível do hardware e pode não ser detectada como modifier. Considerar fallback para Space sozinho (toggle) ou Cmd+Space."
+    },
+    "speech_recognition": {
+      "summary": "SFSpeechRecognizer fornece transcrição em tempo real nativa do macOS",
+      "language_support": {
+        "pt_BR": "Suportado nativamente",
+        "locale": "pt_BR",
+        "code": "Locale(identifier: \"pt_BR\")"
+      },
+      "key_apis": [
+        "SFSpeechRecognizer",
+        "SFSpeechAudioBufferRecognitionRequest",
+        "SFSpeechRecognitionTask",
+        "AVAudioEngine"
+      ],
+      "permissions": [
+        "NSSpeechRecognitionUsageDescription no Info.plist",
+        "NSMicrophoneUsageDescription no Info.plist",
+        "Solicitar permissão via SFSpeechRecognizer.requestAuthorization()"
+      ],
+      "implementation": {
+        "steps": [
+          "1. Criar SFSpeechRecognizer com locale pt_BR",
+          "2. Configurar AVAudioEngine para capturar áudio do microfone",
+          "3. Criar SFSpeechAudioBufferRecognitionRequest",
+          "4. Configurar shouldReportPartialResults = true para resultados em tempo real",
+          "5. Iniciar recognitionTask com handler para processar resultados",
+          "6. Alimentar buffer de áudio no recognitionRequest"
+        ],
+        "code_pattern": {
+          "create_recognizer": "let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: \"pt_BR\"))",
+          "create_request": "let recognitionRequest = SFSpeechAudioBufferRecognitionRequest()",
+          "configure_request": "recognitionRequest.shouldReportPartialResults = true",
+          "start_task": "recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { result, error in ... }",
+          "feed_audio": "inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, time in recognitionRequest.append(buffer) }"
+        }
+      },
+      "real_time": {
+        "partial_results": true,
+        "description": "shouldReportPartialResults = true permite ver transcrição parcial enquanto fala"
+      },
+      "sources": [
+        "https://developer.apple.com/documentation/speech/sfspeechrecognizer",
+        "https://developer.apple.com/documentation/Speech/recognizing-speech-in-live-audio"
+      ]
+    },
+    "clipboard": {
+      "summary": "NSPasteboard é a API para manipular clipboard no macOS",
+      "key_apis": [
+        "NSPasteboard.general",
+        "clearContents()",
+        "setString(_:forType:)"
+      ],
+      "implementation": {
+        "copy_text": "NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)"
+      },
+      "sources": [
+        "https://developer.apple.com/documentation/appkit/nspasteboard"
+      ]
+    },
+    "persistence": {
+      "summary": "CoreData com NSPersistentContainer é a forma recomendada para persistência local",
+      "entity_model": {
+        "entity": "Transcription",
+        "attributes": [
+          { "name": "id", "type": "UUID", "optional": false },
+          { "name": "text", "type": "String", "optional": false },
+          { "name": "timestamp", "type": "Date", "optional": false }
+        ]
+      },
+      "key_apis": [
+        "NSPersistentContainer",
+        "NSManagedObjectContext",
+        "NSManagedObject"
+      ],
+      "implementation": {
+        "setup": "let container = NSPersistentContainer(name: \"AudioFlow\")",
+        "load": "container.loadPersistentStores { description, error in ... }",
+        "save_context": "try container.viewContext.save()",
+        "fetch": "let request = NSFetchRequest<Transcription>(entityName: \"Transcription\")"
+      },
+      "fifo_limit": {
+        "method": "Ao salvar nova transcrição, verificar count e remover mais antiga se > 10",
+        "sort": "Ordenar por timestamp descendente, manter apenas 10"
+      },
+      "sources": [
+        "https://developer.apple.com/documentation/coredata/nspersistentcontainer"
+      ]
+    }
+  },
+  "architecture_decisions": {
+    "language": "Swift",
+    "ui_framework": "AppKit (não SwiftUI)",
+    "reason": "SwiftUI não suporta nativamente menu bar apps sem janela principal",
+    "minimum_macos": "macOS 12.0 (Monterey)",
+    "permissions": [
+      "Microphone (NSMicrophoneUsageDescription)",
+      "Speech Recognition (NSSpeechRecognitionUsageDescription)"
+    ]
+  },
+  "risks_and_mitigations": [
+    {
+      "risk": "Fn key pode não ser detectável globalmente",
+      "mitigation": "Implementar fallback para Space sozinho (toggle) ou Cmd+Shift+Space"
+    },
+    {
+      "risk": "Permissões negadas pelo usuário",
+      "mitigation": "Mostrar instrução clara de como habilitar nas System Preferences"
+    },
+    {
+      "risk": "Transcrição pode ter erros",
+      "mitigation": "Usar partial results para feedback visual, aceitar que é limitação do sistema"
+    }
+  ],
+  "recommended_stack": {
+    "language": "Swift 5.9+",
+    "frameworks": [
+      "AppKit (NSStatusItem, NSMenu, NSPasteboard)",
+      "Speech (SFSpeechRecognizer)",
+      "AVFoundation (AVAudioEngine)",
+      "CoreData (NSPersistentContainer)"
+    ],
+    "architecture": "MVC simples com AppDelegate como controller principal",
+    "no_external_dependencies": true
+  }
+}

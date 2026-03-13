@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ÁudioFlow - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { "primary": "#4f46e5" },
+          fontFamily: { "sans": ["Inter", "sans-serif"] },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#F9F9F9] text-slate-900 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 flex items-center justify-center text-indigo-600">
+        <span class="material-symbols-outlined text-3xl font-bold">graphic_eq</span>
+      </div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-900">ÁudioFlow</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <button class="flex cursor-pointer items-center justify-center rounded-xl h-10 w-10 bg-transparent text-slate-900">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
+        <span class="text-xs font-semibold text-gray-600">L</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="flex-1 overflow-y-auto pb-24">
+
+    <!-- Period Filters -->
+    <div class="flex gap-3 p-4 overflow-x-auto no-scrollbar" id="filters">
+      <button data-filter="today" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl px-4 bg-primary text-white text-sm font-medium">Hoje</button>
+      <button data-filter="yesterday" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Ontem</button>
+      <button data-filter="3days" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Últimos 3 dias</button>
+      <button data-filter="7days" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Últimos 7 dias</button>
+      <button data-filter="week" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Esta semana</button>
+      <button data-filter="month" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Este mês</button>
+      <button data-filter="all" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Todo período</button>
+    </div>
+
+    <!-- Weekly Chart -->
+    <div class="px-4 py-2">
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col gap-1 mb-6">
+          <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Métrica Semanal</p>
+          <p class="text-slate-900 text-lg font-bold">Palavras por dia</p>
+          <div class="flex items-center gap-2">
+            <p class="text-slate-900 text-3xl font-bold" id="stat-weekly-total">--</p>
+            <span id="stat-weekly-trend" class="text-sm font-bold flex items-center"></span>
+          </div>
+        </div>
+        <div class="grid grid-cols-7 gap-3 items-end h-40 px-2" id="chart-bars"></div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 gap-4 p-4">
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex flex-col gap-1">
+          <p class="text-slate-500 text-xs font-medium uppercase">Total de Palavras</p>
+          <p class="text-slate-900 text-2xl font-bold" id="stat-total-words">--</p>
+          <p class="text-slate-400 text-sm font-medium" id="stat-total-count"></p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex flex-col gap-1">
+          <p class="text-slate-500 text-xs font-medium uppercase">Média Diária</p>
+          <p class="text-slate-900 text-2xl font-bold" id="stat-avg-daily">--</p>
+          <p id="stat-avg-trend" class="text-sm font-medium flex items-center gap-1"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Words -->
+    <div class="px-4 py-4">
+      <div class="flex justify-between items-center mb-4 px-1">
+        <h3 class="text-slate-900 text-lg font-bold">Palavras mais faladas</h3>
+      </div>
+      <div class="flex flex-wrap gap-3 py-2" id="top-words">
+        <div class="flex items-center justify-center w-full py-8">
+          <span class="material-symbols-outlined text-gray-300 animate-spin text-4xl">progress_activity</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex items-center justify-around z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+    <a class="flex flex-col items-center gap-1 text-slate-400 w-1/3" href="/">
+      <span class="material-symbols-outlined" style="font-size: 32px;">format_list_bulleted</span>
+      <span class="font-medium text-[11px]">Gravações</span>
+    </a>
+    <div class="relative -top-6 w-1/3 flex justify-center">
+      <button class="bg-primary text-white w-16 h-16 rounded-full shadow-xl shadow-primary/40 flex items-center justify-center border-4 border-white transform hover:scale-105 active:scale-100 transition-transform">
+        <span class="material-symbols-outlined text-3xl">mic</span>
+      </button>
+    </div>
+    <a class="flex flex-col items-center gap-1 text-primary w-1/3" href="/dashboard">
+      <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">dashboard</span>
+      <span class="font-medium text-[11px]">Dashboard</span>
+    </a>
+  </nav>
+
+  <script>
+    const API = '';
+
+    function formatNumber(n) {
+      return n.toLocaleString('pt-BR');
+    }
+
+    function renderChart(weeklyChart) {
+      const container = document.getElementById('chart-bars');
+      if (!weeklyChart || !weeklyChart.length) {
+        container.innerHTML = '<p class="col-span-7 text-center text-gray-400 text-sm">Sem dados</p>';
+        return;
+      }
+
+      const max = Math.max(...weeklyChart.map(d => d.words), 1);
+      let html = '';
+
+      for (const d of weeklyChart) {
+        const pct = Math.max((d.words / max) * 100, 2);
+        const isToday = d.isToday;
+        const barColor = isToday ? 'bg-primary' : 'bg-primary/20';
+        const labelColor = isToday ? 'text-primary' : 'text-slate-400';
+
+        html += `
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <div class="${barColor} rounded-t-lg w-full transition-all duration-500" style="height: ${pct}%;" title="${d.words} palavras"></div>
+            <p class="${labelColor} text-[10px] font-bold uppercase">${d.day}</p>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderTopWords(topWords) {
+      const container = document.getElementById('top-words');
+      if (!topWords || !topWords.length) {
+        container.innerHTML = '<p class="text-gray-400 text-sm w-full text-center py-4">Sem dados suficientes</p>';
+        return;
+      }
+
+      let html = '';
+      for (const { word, count } of topWords) {
+        html += `
+          <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
+            <span class="text-slate-900 font-semibold text-sm">${word.charAt(0).toUpperCase() + word.slice(1)}</span>
+            <span class="text-primary text-xs font-bold bg-white px-2 py-0.5 rounded-full">${formatNumber(count)}x</span>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderTrend(elementId, pct) {
+      const el = document.getElementById(elementId);
+      if (pct > 0) {
+        el.className = 'text-emerald-500 text-sm font-bold flex items-center';
+        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_up</span> +${pct}%`;
+      } else if (pct < 0) {
+        el.className = 'text-primary text-sm font-bold flex items-center';
+        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_down</span> ${pct}%`;
+      } else {
+        el.className = 'text-slate-400 text-sm font-bold flex items-center';
+        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_flat</span> 0%`;
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/api/transcriptions/stats`);
+        const data = await res.json();
+
+        // Weekly total
+        const weeklyTotal = data.weeklyChart.reduce((sum, d) => sum + d.words, 0);
+        document.getElementById('stat-weekly-total').textContent = formatNumber(weeklyTotal);
+        renderTrend('stat-weekly-trend', data.trendPct);
+
+        // Cards
+        document.getElementById('stat-total-words').textContent = formatNumber(data.totalWords);
+        document.getElementById('stat-total-count').textContent = `${data.totalTranscriptions} transcrições`;
+        document.getElementById('stat-avg-daily').textContent = formatNumber(data.avgDaily);
+        renderTrend('stat-avg-trend', data.trendPct);
+
+        // Chart
+        renderChart(data.weeklyChart);
+
+        // Top words
+        renderTopWords(data.topWords);
+      } catch (err) {
+        document.getElementById('top-words').innerHTML = `
+          <div class="text-center w-full py-8">
+            <span class="material-symbols-outlined text-red-300 text-4xl mb-2">error</span>
+            <p class="text-gray-400">Não foi possível conectar ao servidor</p>
+            <p class="text-gray-300 text-sm mt-1">Execute: <code class="bg-gray-100 px-2 py-0.5 rounded">npm start</code> na pasta frontend/</p>
+          </div>
+        `;
+      }
+    }
+
+    // Filter buttons (visual toggle, data is same for now)
+    document.getElementById('filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      document.querySelectorAll('#filters button').forEach(b => {
+        b.className = 'flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium';
+      });
+      btn.className = 'flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl px-4 bg-primary text-white text-sm font-medium';
+    });
+
+    // WebSocket for real-time
+    function connectWS() {
+      try {
+        const ws = new WebSocket('ws://localhost:3001');
+        ws.onmessage = () => loadStats();
+        ws.onclose = () => setTimeout(connectWS, 3000);
+      } catch (_) {
+        setTimeout(connectWS, 3000);
+      }
+    }
+
+    loadStats();
+    connectWS();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "project": "AudioFlow",
+  "assessment_date": "2026-03-05",
+  "dimensions": {
+    "scope": {
+      "score": 2,
+      "justification": "App Swift simples (~5-10 arquivos), menu bar app padrão",
+      "factors": [
+        "Sem janela principal visível",
+        "UI mínima (menu dropdown apenas)",
+        "Funcionalidades bem delimitadas"
+      ]
+    },
+    "integration": {
+      "score": 2,
+      "justification": "APIs nativas Apple, sem serviços externos",
+      "factors": [
+        "Speech framework nativo",
+        "Pasteboard (clipboard) nativo",
+        "CoreData local",
+        "Sem APIs de terceiros"
+      ]
+    },
+    "infrastructure": {
+      "score": 1,
+      "justification": "App local, sem backend/Docker/CI/CD complexo",
+      "factors": [
+        "Sem servidor",
+        "Sem banco de dados remoto",
+        "Deploy via App Store ou notarização"
+      ]
+    },
+    "knowledge": {
+      "score": 3,
+      "justification": "Swift/SwiftUI bem documentado, mas stack nova neste contexto",
+      "factors": [
+        "SFSpeechRecognizer bem documentado pela Apple",
+        "Muitos exemplos de menu bar apps",
+        "Global hotkeys têm padrões estabelecidos"
+      ]
+    },
+    "risk": {
+      "score": 1,
+      "justification": "Projeto pessoal, sem SLA, sem consequências críticas",
+      "factors": [
+        "Sem usuários externos",
+        "Sem dados sensíveis",
+        "Sem dependências críticas de terceiros"
+      ]
+    }
+  },
+  "total_score": 9,
+  "classification": "STANDARD",
+  "pipeline": {
+    "phases_required": 6,
+    "phases_completed": 2,
+    "current_phase": 3,
+    "phases": [
+      { "phase": 1, "name": "Gather", "agent": "@pm", "output": "requirements.json", "status": "done" },
+      { "phase": 2, "name": "Assess", "agent": "@architect", "output": "complexity.json", "status": "done" },
+      { "phase": 3, "name": "Research", "agent": "@analyst", "output": "research.json", "status": "pending" },
+      { "phase": 4, "name": "Write Spec", "agent": "@pm", "output": "spec.md", "status": "pending" },
+      { "phase": 5, "name": "Critique", "agent": "@qa", "output": "critique.json", "status": "pending" },
+      { "phase": 6, "name": "Plan", "agent": "@architect", "output": "implementation.yaml", "status": "pending" }
+    ]
+  },
+  "recommendations": {
+    "architecture": "Swift/SwiftUI nativo com AppDelegate para menu bar",
+    "storage": "CoreData com SQLite backend para histórico",
+    "hotkey": "Carbon API ou NSEvent.addGlobalMonitorForEvents",
+    "speech": "SFSpeechRecognizer com locale pt-BR",
+    "clipboard": "NSPasteboard.general"
+  }
+}

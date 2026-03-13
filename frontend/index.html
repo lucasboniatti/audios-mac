@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ÁudioFlow - Suas Transcrições</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { "primary": "#4f46e5" },
+          fontFamily: { "sans": ["Inter", "sans-serif"] },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .toast { animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 1.7s forwards; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; } }
+  </style>
+</head>
+<body class="bg-[#F9F9F9] text-slate-900 flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 flex items-center justify-center text-indigo-600">
+        <span class="material-symbols-outlined text-3xl font-bold">graphic_eq</span>
+      </div>
+      <h1 class="text-xl font-bold tracking-tight">ÁudioFlow</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <button class="relative p-2 text-gray-500" id="notif-btn">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+        <span id="notif-dot" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white hidden"></span>
+      </button>
+      <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
+        <span class="text-xs font-semibold text-gray-600">L</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow p-4 space-y-6 pb-24">
+    <section>
+      <h2 class="text-2xl font-bold text-gray-900">Bem-vindo, Lucas</h2>
+    </section>
+
+    <!-- Dynamic transcription list -->
+    <div id="transcription-list">
+      <div class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined text-gray-300 animate-spin text-4xl">progress_activity</span>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <span class="material-symbols-outlined text-gray-200 text-6xl mb-4">mic_off</span>
+      <p class="text-gray-400 text-lg">Nenhuma transcrição ainda</p>
+      <p class="text-gray-300 text-sm mt-1">Use Fn+Space no app para gravar</p>
+    </div>
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60]"></div>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex items-center justify-between z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+    <a class="flex flex-col items-center gap-1 text-indigo-600 w-1/3" href="/">
+      <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">view_list</span>
+      <span class="font-medium text-[11px]">Gravações</span>
+    </a>
+    <div class="relative -top-6 w-1/3 flex justify-center">
+      <button class="bg-indigo-600 text-white w-16 h-16 rounded-full shadow-lg shadow-indigo-500/30 flex items-center justify-center border-4 border-white transform hover:scale-105 transition-transform">
+        <span class="material-symbols-outlined" style="font-size: 32px;">mic</span>
+      </button>
+    </div>
+    <a class="flex flex-col items-center gap-1 text-slate-400 w-1/3" href="/dashboard">
+      <span class="material-symbols-outlined" style="font-size: 32px;">dashboard</span>
+      <span class="font-medium text-[11px]">Dashboard</span>
+    </a>
+  </nav>
+
+  <script>
+    const API = '';
+    const WS_URL = 'ws://localhost:3001';
+
+    // --- Helpers ---
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      return `${d.getDate()} de ${months[d.getMonth()]}, ${d.getFullYear()}`;
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function countWords(text) {
+      return text.split(/\s+/).filter(w => w.length > 0).length;
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast bg-gray-800 text-white px-4 py-2 rounded-full text-sm shadow-lg';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Texto copiado!');
+      } catch {
+        showToast('Erro ao copiar');
+      }
+    }
+
+    // --- Group transcriptions by date ---
+    function groupByDate(transcriptions) {
+      const groups = {};
+      for (const t of transcriptions) {
+        const key = formatDate(t.timestamp);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(t);
+      }
+      return groups;
+    }
+
+    // --- Render ---
+    function render(transcriptions) {
+      const list = document.getElementById('transcription-list');
+      const empty = document.getElementById('empty-state');
+
+      if (!transcriptions.length) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      const groups = groupByDate(transcriptions);
+      let html = '';
+
+      for (const [date, items] of Object.entries(groups)) {
+        const totalWords = items.reduce((sum, t) => sum + countWords(t.text), 0);
+
+        html += `
+          <section class="space-y-4 mt-6 first:mt-0">
+            <div class="flex items-center justify-start">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">${date}</h3>
+              <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm text-xs font-medium ml-3">${totalWords} palavras</div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+        `;
+
+        for (const t of items) {
+          const escaped = t.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          html += `
+            <article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+              <span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">${formatTime(t.timestamp)}</span>
+              <div class="flex-grow">
+                <p class="text-[15px] leading-relaxed text-gray-800">${escaped}</p>
+              </div>
+              <div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="copyText(\`${escaped.replace(/`/g, '\\`')}\`)" class="p-1 text-gray-400 hover:text-indigo-600 transition-colors" title="Copiar">
+                  <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+              </div>
+            </article>
+          `;
+        }
+
+        html += '</div></section>';
+      }
+
+      list.innerHTML = html;
+    }
+
+    // --- Fetch data ---
+    async function loadTranscriptions() {
+      try {
+        const res = await fetch(`${API}/api/transcriptions`);
+        const data = await res.json();
+        render(data.transcriptions);
+      } catch (err) {
+        document.getElementById('transcription-list').innerHTML = `
+          <div class="text-center py-12">
+            <span class="material-symbols-outlined text-red-300 text-4xl mb-2">error</span>
+            <p class="text-gray-400">Não foi possível conectar ao servidor</p>
+            <p class="text-gray-300 text-sm mt-1">Execute: <code class="bg-gray-100 px-2 py-0.5 rounded">npm start</code> na pasta frontend/</p>
+          </div>
+        `;
+      }
+    }
+
+    // --- WebSocket real-time ---
+    function connectWS() {
+      try {
+        const ws = new WebSocket(WS_URL);
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_transcriptions' || data.type === 'refresh') {
+            loadTranscriptions();
+            document.getElementById('notif-dot').classList.remove('hidden');
+            showToast('Nova transcrição recebida!');
+          }
+        };
+        ws.onclose = () => setTimeout(connectWS, 3000);
+      } catch (_) {
+        setTimeout(connectWS, 3000);
+      }
+    }
+
+    // --- Init ---
+    loadTranscriptions();
+    connectWS();
+  </script>
+
+</body>
+</html>

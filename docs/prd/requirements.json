@@ -1,0 +1,168 @@
+{
+  "project": {
+    "name": "AudioFlow",
+    "description": "App nativo macOS para transcrição de áudio via hotkey com clipboard automático",
+    "version": "1.0.0",
+    "status": "draft",
+    "created_at": "2026-03-05"
+  },
+  "vision": {
+    "problem_statement": "Transcrever áudio rapidamente sem abrir apps ou janelas, com resultado direto no clipboard",
+    "solution": "Menu bar app que captura áudio via hotkey, transcreve nativamente e copia texto automaticamente",
+    "target_user": "Usuários macOS que precisam de ditado rápido para documentação, mensagens e notas"
+  },
+  "functional_requirements": {
+    "FR-001": {
+      "title": "Captura de áudio via hotkey",
+      "description": "Capturar áudio do microfone quando o usuário pressionar Fn + Espaço",
+      "behavior": "Toggle - primeira pressão inicia gravação, segunda pressão encerra",
+      "feedback": "Indicador visual mínimo no menu bar durante gravação"
+    },
+    "FR-002": {
+      "title": "Transcrição nativa macOS",
+      "description": "Usar Speech Recognition framework nativo do macOS para transcrição",
+      "language": "pt-BR (Português Brasileiro)",
+      "constraints": "Requer permissão de microfone e Speech Recognition"
+    },
+    "FR-003": {
+      "title": "Clipboard automático",
+      "description": "Copiar transcrição automaticamente para o clipboard após cada gravação",
+      "behavior": "Texto disponível imediatamente via Cmd+V"
+    },
+    "FR-004": {
+      "title": "Histórico de transcrições",
+      "description": "Manter as 10 últimas transcrições acessíveis via menu bar",
+      "retention": "10 itens (FIFO - First In First Out)",
+      "storage": "Local (CoreData/SQLite)"
+    },
+    "FR-005": {
+      "title": "Busca no histórico",
+      "description": "Permitir busca textual no histórico de transcrições",
+      "scope": "Texto completo das transcrições"
+    },
+    "FR-006": {
+      "title": "Export de transcrições",
+      "description": "Exportar histórico de transcrições em formato TXT",
+      "format": "TXT (uma transcrição por linha com timestamp)"
+    },
+    "FR-007": {
+      "title": "Menu bar app",
+      "description": "Rodar exclusivamente em background como menu bar app",
+      "constraints": "Sem janela principal visível, apenas menu dropdown"
+    }
+  },
+  "non_functional_requirements": {
+    "NFR-001": {
+      "title": "Performance",
+      "description": "Transcrição deve iniciar em menos de 500ms após hotkey",
+      "metric": "< 500ms latência de início"
+    },
+    "NFR-002": {
+      "title": "Memória",
+      "description": "App deve consumir menos de 100MB RAM em idle",
+      "metric": "< 100MB RAM quando não está gravando"
+    },
+    "NFR-003": {
+      "title": "Confiabilidade",
+      "description": "Não perder transcrições em caso de crash",
+      "strategy": "Salvar incrementalmente durante gravação"
+    },
+    "NFR-004": {
+      "title": "Privacidade",
+      "description": "Áudios são descartados após transcrição, apenas texto é persistido",
+      "data_retention": "Áudio: 0s (descartado imediatamente), Texto: 10 transcrições"
+    }
+  },
+  "user_stories": [
+    {
+      "id": "US-001",
+      "as_a": "usuário macOS",
+      "i_want_to": "pressionar Fn + Espaço para iniciar gravação de áudio",
+      "so_that": "posso ditar texto sem abrir nenhum app"
+    },
+    {
+      "id": "US-002",
+      "as_a": "usuário macOS",
+      "i_want_to": "pressionar Espaço novamente para parar gravação",
+      "so_that": "tenho controle total sobre quando parar"
+    },
+    {
+      "id": "US-003",
+      "as_a": "usuário macOS",
+      "i_want_to": "ter o texto transcrito copiado automaticamente",
+      "so_that": "posso colar imediatamente com Cmd+V"
+    },
+    {
+      "id": "US-004",
+      "as_a": "usuário macOS",
+      "i_want_to": "ver as 10 últimas transcrições no menu bar",
+      "so_that": "posso recuperar textos anteriores"
+    },
+    {
+      "id": "US-005",
+      "as_a": "usuário macOS",
+      "i_want_to": "buscar no histórico de transcrições",
+      "so_that": "encontro textos específicos rapidamente"
+    },
+    {
+      "id": "US-006",
+      "as_a": "usuário macOS",
+      "i_want_to": "exportar transcrições em TXT",
+      "so_that": "posso arquivar ou compartilhar meu histórico"
+    }
+  ],
+  "acceptance_criteria": {
+    "AC-001": "App aparece apenas no menu bar, sem janela visível",
+    "AC-002": "Fn + Espaço inicia gravação com indicador visual",
+    "AC-003": "Espaço encerra gravação e transcreve automaticamente",
+    "AC-004": "Texto transcrito está no clipboard imediatamente",
+    "AC-005": "Histórico mostra últimas 10 transcrições com timestamp",
+    "AC-006": "Busca filtra transcrições em tempo real",
+    "AC-007": "Export gera arquivo TXT válido",
+    "AC-008": "Áudio é descartado após transcrição (não persiste)"
+  },
+  "constraints": {
+    "CON-001": "MacOS 12.0+ (Monterey) mínimo para Speech Recognition nativo",
+    "CON-002": "Swift/SwiftUI nativo (não Electron ou frameworks multi-plataforma)",
+    "CON-003": "Hotkey fixo: Fn + Espaço (não customizável no MVP)",
+    "CON-004": "Idioma fixo: pt-BR (não multi-idioma no MVP)"
+  },
+  "moscow_prioritization": {
+    "must_have": [
+      "FR-001: Captura de áudio via hotkey (Fn + Espaço toggle)",
+      "FR-002: Transcrição nativa macOS (pt-BR)",
+      "FR-003: Clipboard automático",
+      "FR-007: Menu bar app (background)"
+    ],
+    "should_have": [
+      "FR-004: Histórico de transcrições (10 itens)",
+      "FR-005: Busca no histórico"
+    ],
+    "could_have": [
+      "FR-006: Export TXT"
+    ],
+    "wont_have": [
+      "Multi-idioma",
+      "Atalhos customizáveis",
+      "Cloud sync (iCloud)",
+      "Gravação de áudio persistente"
+    ]
+  },
+  "technical_notes": {
+    "speech_framework": "Speech framework nativo do macOS (SFSpeechRecognizer)",
+    "menu_bar": "NSStatusItem com NSMenu",
+    "hotkey": "Fn + Espaço funciona como toggle (start/stop)",
+    "storage": "CoreData com SQLite backend",
+    "permissions": "Microfone + Speech Recognition (Solicitar no primeiro uso)"
+  },
+  "out_of_scope": [
+    "Suporte a Windows/Linux",
+    "Multi-idioma",
+    "Cloud sync",
+    "Edição de transcrições",
+    "Compartilhamento direto",
+    "Integração com outros apps",
+    "Atalhos customizáveis",
+    "Persistência de áudio"
+  ]
+}

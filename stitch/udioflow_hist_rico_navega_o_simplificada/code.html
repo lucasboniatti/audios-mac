@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flow - Suas Transcrições</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts for Inter-like appearance -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="typography">
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+<style data-purpose="layout-tweaks">
+    /* Custom scrollbar for a cleaner mobile look */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
+    }
+  </style>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/></head>
+<body class="bg-[#F9F9F9] text-slate-900 flex flex-col min-h-screen">
+<!-- BEGIN: Mobile Header -->
+<header class="sticky top-0 z-50 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 flex items-center justify-center text-indigo-600">
+<span class="material-symbols-outlined text-3xl font-bold">graphic_eq</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight">ÁudioFlow</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-gray-500" data-purpose="notifications-btn">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
+<span class="text-xs font-semibold text-gray-600">L</span>
+</div>
+</div>
+</header>
+<!-- END: Mobile Header -->
+<!-- BEGIN: Main Content -->
+<main class="flex-grow p-4 space-y-6 pb-24">
+<!-- BEGIN: Welcome Section -->
+<section data-purpose="welcome-banner">
+<div class="flex flex-col gap-1">
+<h2 class="text-2xl font-bold text-gray-900">Bem-vindo, Lucas</h2>
+</div>
+</section>
+<!-- END: Welcome Section -->
+<!-- BEGIN: Subscription Status -->
+<!-- END: Subscription Status -->
+<!-- BEGIN: Transcription History -->
+<section class="space-y-4">
+<div class="flex items-center justify-between flex-row justify-start">
+<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">5 de Março, 2026</h3><div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm text-xs font-medium ml-3">150 palavras</div>
+</div>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50"><!-- Entry 1: Transcription snippet -->
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">16:44</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">
+      Lembrar de verificar a integração com a API de calendário para sincronizar os horários das reuniões automaticamente no dashboard do projeto.
+    </p>
+</div>
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors" title="Copiar"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="p-1 text-gray-400 hover:text-yellow-500 transition-colors" title="Favoritar"><span class="material-symbols-outlined text-[20px]">star</span></button>
+</div>
+</article>
+<!-- Entry 2: Transcription snippet -->
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80 bg-blue-50">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">16:01</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">
+      O app é para rodar em background, não precisa ter nenhuma janela visível. O áudio pode ser gravado somente, mantido somente o último áudio. Na verdade, os áudios não precisam ser gravados, não, pode excluir, descartar eles depois de transcrever. Tempo máximo de gravação? Não precisa colocar um tempo limite, que não é necessário...
+    </p>
+</div>
+<div class="absolute right-3 flex gap-2 group-hover:opacity-100 transition-opacity opacity-100 bottom-3 top-3">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors" title="Copiar"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</article>
+<!-- Entry 3: Transcription snippet -->
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">15:57</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">
+      Ideia para o design do app: usar tons de azul marinho e branco para transmitir mais profissionalismo e foco. Talvez um modo escuro automático.
+    </p>
+</div>
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors" title="Copiar"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="p-1 text-gray-400 hover:text-yellow-500 transition-colors" title="Favoritar"><span class="material-symbols-outlined text-[20px]">star</span></button>
+</div>
+</article></div>
+</section><section class="space-y-4 mt-6">
+<div class="flex items-center justify-between flex-row justify-start">
+<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">4 de Março, 2026</h3>
+<div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm text-xs font-medium ml-3">84 palavras</div>
+</div>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">14:20</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">Apresentação de amanhã confirmada para as 9h. Focar nos resultados do último trimestre e nas projeções de crescimento para o próximo ano.</p>
+</div>
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="p-1 text-gray-400 hover:text-yellow-500 transition-colors"><span class="material-symbols-outlined text-[20px]">star</span></button>
+</div>
+</article>
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">10:15</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">Lista de compras para o escritório: café, papel A4, toners novos e talvez algumas plantas para melhorar o ambiente de trabalho.</p>
+</div>
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="p-1 text-gray-400 hover:text-yellow-500 transition-colors"><span class="material-symbols-outlined text-[20px]">star</span></button>
+</div>
+</article>
+</div>
+</section><section class="space-y-4 mt-6">
+<div class="flex items-center justify-between flex-row justify-start">
+<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">3 de Março, 2026</h3>
+<div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm text-xs font-medium ml-3">112 palavras</div>
+</div>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+<article class="p-4 flex gap-4 relative group transition-colors hover:bg-slate-50/80">
+<span class="text-xs font-medium text-gray-400 w-16 flex-shrink-0">18:05</span>
+<div class="flex-grow">
+<p class="text-[15px] leading-relaxed text-gray-800">Pensando em começar um curso de Python para automação. Parece muito útil para as tarefas repetitivas que fazemos diariamente na empresa.</p>
+</div>
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="p-1 text-gray-400 hover:text-yellow-500 transition-colors"><span class="material-symbols-outlined text-[20px]">star</span></button>
+</div>
+</article>
+</div>
+</section>
+<!-- END: Transcription History -->
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex items-center justify-between z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]" data-purpose="mobile-nav"><a class="flex flex-col items-center gap-1 text-indigo-600 w-1/3" href="#"><span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">view_list</span><span class="font-medium text-[11px]">Gravações</span></a><div class="relative -top-6 w-1/3 flex justify-center"><button class="bg-indigo-600 text-white w-16 h-16 rounded-full shadow-lg shadow-indigo-500/30 flex items-center justify-center border-4 border-white transform hover:scale-105 transition-transform"><span class="material-symbols-outlined" style="font-size: 32px;">mic</span></button></div><a class="flex flex-col items-center gap-1 text-slate-400 w-1/3" href="#"><span class="material-symbols-outlined" style="font-size: 32px;">dashboard</span><span class="font-medium text-[11px]">Dashboard</span></a></nav>
+<!-- END: Bottom Navigation Bar -->
+</body></html>

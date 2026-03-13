@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ÁudioFlow - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4f46e5",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 flex items-center justify-center text-indigo-600">
+<span class="material-symbols-outlined text-3xl font-bold">graphic_eq</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900">ÁudioFlow</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex cursor-pointer items-center justify-center rounded-xl h-10 w-10 bg-transparent text-slate-900 dark:text-slate-100"><span class="material-symbols-outlined">notifications</span></button>
+<div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
+<span class="text-xs font-semibold text-gray-600">L</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Filters -->
+<div class="flex gap-3 p-4 overflow-x-auto no-scrollbar">
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl px-4 bg-primary">
+<p class="text-white text-sm font-medium">Hoje</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Ontem</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Últimos 3 dias</p>
+</div><div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Últimos 7 dias</p>
+</div><div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4"><p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Esta semana</p></div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Este mês</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Este ano</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Todo período</p>
+</div>
+<div class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-slate-800 px-4">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Personalizado</p>
+</div>
+</div>
+<!-- Chart Card -->
+<div class="px-4 py-2">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="flex flex-col gap-1 mb-6">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Métrica Semanal</p>
+<p class="text-slate-900 dark:text-slate-100 text-lg font-bold">Palavras por dia</p>
+<div class="flex items-center gap-2">
+<p class="text-slate-900 dark:text-slate-100 text-3xl font-bold">14,250</p>
+<span class="text-emerald-500 text-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12%
+                        </span>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-3 items-end h-40 px-2">
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 35%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Seg</p>
+</div>
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 55%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Ter</p>
+</div>
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 45%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Qua</p>
+</div>
+<div class="flex flex-col items-center gap-2 h-full justify-end"><div class="bg-primary rounded-t-lg w-full" style="height: 90%;"></div><p class="text-primary text-[10px] font-bold uppercase">Qui</p></div>
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 40%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Sex</p>
+</div>
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 70%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Sáb</p>
+</div>
+<div class="flex flex-col items-center gap-2 h-full justify-end">
+<div class="bg-primary/20 dark:bg-primary/10 rounded-t-lg w-full" style="height: 50%;"></div>
+<p class="text-slate-400 text-[10px] font-bold uppercase">Dom</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Stats -->
+<div class="grid grid-cols-2 gap-4 p-4">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Total de Palavras</p>
+<p class="text-slate-900 dark:text-slate-100 text-2xl font-bold">85,420</p>
+<p class="text-emerald-500 text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">arrow_upward</span> 5%
+                    </p>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Média Diária</p>
+<p class="text-slate-900 dark:text-slate-100 text-2xl font-bold">12,203</p>
+<p class="text-sm font-medium flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-sm">arrow_downward</span> 2%</p>
+</div>
+</div>
+</div>
+<!-- Top Words List -->
+<div class="px-4 py-4">
+<div class="flex justify-between items-center mb-4 px-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Palavras mais faladas</h3>
+<button class="text-primary text-xs font-bold">Ver todas</button>
+</div>
+<div class="flex flex-wrap gap-3 py-2"><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Inovação</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">1,240x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Estratégia</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">982x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Feedback</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">856x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Produtividade</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">723x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Criatividade</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">680x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Liderança</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">645x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Foco</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">612x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Resultado</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">598x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Planejamento</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">567x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Agilidade</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">543x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Tecnologia</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">520x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Design</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">495x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Usuário</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">478x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Mercado</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">452x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Crescimento</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">430x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Valor</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">415x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Equipe</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">392x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Cultura</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">370x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Empatia</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">345x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Ética</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">322x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Visão</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">310x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Missão</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">295x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Propósito</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">280x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Impacto</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">265x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Eficiência</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">242x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Qualidade</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">230x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Solução</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">215x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Ideia</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">198x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Projeto</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">185x</span></div><div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800/30 shadow-sm"><span class="text-slate-900 dark:text-slate-100 font-semibold text-sm">Sucesso</span><span class="text-primary dark:text-blue-400 text-xs font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full">170x</span></div></div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex items-end z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] justify-around"><a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="#"><span class="material-symbols-outlined text-2xl" style="font-size: 32px;">format_list_bulleted</span><span class="font-medium text-xs">Gravações</span></a><div class="relative -top-6"><button class="bg-primary text-white w-16 h-16 rounded-full shadow-xl shadow-primary/40 flex items-center justify-center border-4 border-white dark:border-background-dark transform scale-105 active:scale-100 transition-transform"><span class="material-symbols-outlined text-3xl">mic</span></button></div><a class="flex flex-col items-center gap-1 text-primary" href="#"><span class="material-symbols-outlined text-2xl" style="font-size: 32px; font-variation-settings: 'FILL' 1;">dashboard</span><span class="font-medium text-xs">Dashboard</span></a></nav>
+</body></html>

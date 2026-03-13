@@ -1,0 +1,72 @@
+handoff:
+  from_agent: "ux-design-expert"
+  to_agent: "dev"
+  timestamp: "2026-03-13T16:50:00Z"
+  consumed: false
+
+  story_context:
+    story_id: "3.4"
+    story_path: "docs/stories/3.4.story.md"
+    story_status: "In Progress"
+    current_task: "Frontend web funcional conectado ao CoreData do app macOS"
+    branch: "main"
+
+  summary: |
+    Criei o frontend web do ÁudioFlow com duas páginas (Gravações + Dashboard)
+    conectadas ao CoreData/SQLite do app macOS via Node.js API bridge.
+    Tudo funcional em localhost:3000. Dados reais, WebSocket real-time, copiar texto.
+
+  decisions:
+    - "Frontend como HTML estático servido por Express (não React/Vue — KISS)"
+    - "Node.js lê diretamente o SQLite do CoreData (better-sqlite3, readonly)"
+    - "WebSocket polling a cada 2s para detectar novas transcrições"
+    - "CoreData epoch offset: 2001-01-01T00:00:00Z aplicado na conversão de timestamps"
+    - "Tailwind via CDN, sem build step — simplicidade para protótipo"
+
+  files_created:
+    - "frontend/server.js — API Express + WebSocket (3 endpoints + static serve)"
+    - "frontend/index.html — Página Gravações (fetch real, agrupamento por data, copiar)"
+    - "frontend/dashboard.html — Página Dashboard (stats, gráfico semanal, top words)"
+    - "frontend/package.json — deps: express, better-sqlite3, ws, cors"
+
+  architecture: |
+    [App Swift] → CoreData (SQLite) ← [Node.js server.js :3000] → [HTML Frontend]
+                                              ↓ WebSocket :3001
+                                         [Auto-update no browser]
+
+    DB Path: ~/Library/Application Support/AudioFlow/AudioFlow.sqlite
+    Schema: ZTRANSCRIPTION (Z_PK, ZTEXT, ZTIMESTAMP, ZID blob)
+    Timestamp: CoreData epoch = seconds since 2001-01-01T00:00:00Z
+
+  api_endpoints:
+    - "GET /api/transcriptions — lista paginada (?limit=&offset=)"
+    - "GET /api/transcriptions/search?q= — busca case-insensitive"
+    - "GET /api/transcriptions/stats — totalWords, avgDaily, weeklyChart, topWords"
+    - "GET / — serve index.html (Gravações)"
+    - "GET /dashboard — serve dashboard.html"
+
+  what_works:
+    - "Transcrições reais do CoreData renderizadas agrupadas por data"
+    - "Botão copiar funcional (navigator.clipboard)"
+    - "Dashboard com dados calculados do banco real"
+    - "WebSocket auto-refresh quando nova transcrição é detectada"
+    - "Toast notifications"
+    - "Navegação entre páginas"
+
+  blockers: []
+
+  next_actions:
+    - "Remover limite FIFO de 10 itens no HistoryController.swift (ou aumentar para 1000+)"
+    - "Adicionar busca no frontend (input + fetch /api/transcriptions/search)"
+    - "Implementar filtros de período no Dashboard (hoje, semana, mês — backend já retorna datas)"
+    - "Considerar migrar de Tailwind CDN para build local se performance for problema"
+    - "Adicionar npm start ao build_app.sh ou criar script de inicialização unificado"
+    - "Testar com volume alto de transcrições (stress test)"
+
+  tech_context:
+    runtime: "Node.js v24+"
+    db_driver: "better-sqlite3 (readonly)"
+    http: "Express 5"
+    realtime: "ws (WebSocket)"
+    frontend: "HTML + Tailwind CDN + vanilla JS"
+    start_command: "cd frontend && npm start"
