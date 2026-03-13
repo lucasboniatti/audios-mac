@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let notificationService = NotificationService()
     private let transcriptionCommitCoordinator = TranscriptionCommitCoordinator()
     private var currentTranscription = ""
+    private var pasteTargetApplication: NSRunningApplication?
 
     // Debug file
     private static let debugLogPath = "/tmp/audioflow_debug.log"
@@ -159,6 +160,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         switch state {
         case .recording:
+            capturePasteTargetApplication()
             currentTranscription = ""
             transcriptionCommitCoordinator.beginSession()
             do {
@@ -220,6 +222,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Save to history
         saveTranscription(normalizedText)
+
+        restorePasteTargetApplicationFocus()
 
         // Try to paste into the focused field as if the user pressed Cmd+V
         triggerAutoPaste()
@@ -560,6 +564,30 @@ extension AppDelegate: SpeechServiceDelegate {
 
     private func copyToClipboard(_ text: String) {
         ClipboardService.shared.copy(text)
+    }
+
+    private func capturePasteTargetApplication() {
+        let currentAppProcessIdentifier = ProcessInfo.processInfo.processIdentifier
+
+        if let frontmostApplication = NSWorkspace.shared.frontmostApplication,
+           frontmostApplication.processIdentifier != currentAppProcessIdentifier {
+            pasteTargetApplication = frontmostApplication
+            logDebug("Captured paste target app: \(frontmostApplication.localizedName ?? "unknown")")
+        } else {
+            pasteTargetApplication = nil
+            logDebug("No external frontmost app captured for auto-paste")
+        }
+    }
+
+    private func restorePasteTargetApplicationFocus() {
+        guard let pasteTargetApplication else {
+            logDebug("Skipping paste target activation because no previous app was captured")
+            return
+        }
+
+        let appName = pasteTargetApplication.localizedName ?? "unknown"
+        let didActivate = pasteTargetApplication.activate(options: [.activateIgnoringOtherApps])
+        logDebug("Restoring focus to \(appName): \(didActivate)")
     }
 
     private func saveTranscription(_ text: String) {

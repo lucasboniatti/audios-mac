@@ -22,7 +22,8 @@ final class AutoPasteServiceTests: XCTestCase {
         XCTAssertEqual(permissionChecker.prompts, [true])
         XCTAssertEqual(pastePoster.postCount, 1)
         XCTAssertEqual(fallbackPastePoster.postCount, 0)
-        XCTAssertEqual(alertPresenter.alertCount, 0)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 0)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 0)
     }
 
     func testPasteLatestClipboardContents_StillPostsPasteShortcutWhenAccessibilityCannotBeConfirmed() {
@@ -43,7 +44,8 @@ final class AutoPasteServiceTests: XCTestCase {
         XCTAssertEqual(permissionChecker.prompts, [true])
         XCTAssertEqual(pastePoster.postCount, 0)
         XCTAssertEqual(fallbackPastePoster.postCount, 1)
-        XCTAssertEqual(alertPresenter.alertCount, 0)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 0)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 0)
     }
 
     func testPasteLatestClipboardContents_OnlyPromptsSystemPermissionOncePerSession() {
@@ -64,7 +66,8 @@ final class AutoPasteServiceTests: XCTestCase {
         XCTAssertEqual(permissionChecker.prompts, [true, false])
         XCTAssertEqual(pastePoster.postCount, 0)
         XCTAssertEqual(fallbackPastePoster.postCount, 2)
-        XCTAssertEqual(alertPresenter.alertCount, 0)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 0)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 0)
     }
 
     func testPasteLatestClipboardContents_RecoversAfterPermissionGrantedLater() {
@@ -84,7 +87,44 @@ final class AutoPasteServiceTests: XCTestCase {
         XCTAssertEqual(permissionChecker.prompts, [true, false])
         XCTAssertEqual(pastePoster.postCount, 1)
         XCTAssertEqual(fallbackPastePoster.postCount, 1)
-        XCTAssertEqual(alertPresenter.alertCount, 0)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 0)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 0)
+    }
+
+    func testPasteLatestClipboardContents_ShowsAccessibilityAlertWhenFallbackReportsMissingAccessibilityPermission() {
+        let permissionChecker = MockAccessibilityPermissionChecker(results: [false, false])
+        let pastePoster = MockPasteShortcutPoster()
+        let fallbackPastePoster = MockPasteShortcutPoster(errorToEmit: .missingAccessibilityPermission)
+        let alertPresenter = MockAutoPasteAlertPresenter()
+        let service = AutoPasteService(
+            accessibilityPermissionChecker: permissionChecker,
+            pasteShortcutPoster: pastePoster,
+            fallbackPasteShortcutPoster: fallbackPastePoster,
+            alertPresenter: alertPresenter
+        )
+
+        XCTAssertEqual(service.pasteLatestClipboardContents(), .attemptedWithoutConfirmedAccessibility)
+        XCTAssertEqual(service.pasteLatestClipboardContents(), .attemptedWithoutConfirmedAccessibility)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 1)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 0)
+    }
+
+    func testPasteLatestClipboardContents_ShowsAutomationAlertWhenFallbackReportsMissingAutomationPermission() {
+        let permissionChecker = MockAccessibilityPermissionChecker(results: [false, false])
+        let pastePoster = MockPasteShortcutPoster()
+        let fallbackPastePoster = MockPasteShortcutPoster(errorToEmit: .missingAutomationPermission)
+        let alertPresenter = MockAutoPasteAlertPresenter()
+        let service = AutoPasteService(
+            accessibilityPermissionChecker: permissionChecker,
+            pasteShortcutPoster: pastePoster,
+            fallbackPasteShortcutPoster: fallbackPastePoster,
+            alertPresenter: alertPresenter
+        )
+
+        XCTAssertEqual(service.pasteLatestClipboardContents(), .attemptedWithoutConfirmedAccessibility)
+        XCTAssertEqual(service.pasteLatestClipboardContents(), .attemptedWithoutConfirmedAccessibility)
+        XCTAssertEqual(alertPresenter.accessibilityAlertCount, 0)
+        XCTAssertEqual(alertPresenter.automationAlertCount, 1)
     }
 }
 
@@ -105,16 +145,29 @@ private final class MockAccessibilityPermissionChecker: AccessibilityPermissionC
 
 private final class MockPasteShortcutPoster: PasteShortcutPosting {
     private(set) var postCount = 0
+    private let errorToEmit: PasteShortcutPostingError?
 
-    func postPasteShortcut() {
+    init(errorToEmit: PasteShortcutPostingError? = nil) {
+        self.errorToEmit = errorToEmit
+    }
+
+    func postPasteShortcut(onError: ((PasteShortcutPostingError) -> Void)?) {
         postCount += 1
+        if let errorToEmit {
+            onError?(errorToEmit)
+        }
     }
 }
 
 private final class MockAutoPasteAlertPresenter: AutoPasteAlertPresenting {
-    private(set) var alertCount = 0
+    private(set) var accessibilityAlertCount = 0
+    private(set) var automationAlertCount = 0
 
     func showAccessibilityRequiredAlert() {
-        alertCount += 1
+        accessibilityAlertCount += 1
+    }
+
+    func showAutomationRequiredAlert() {
+        automationAlertCount += 1
     }
 }

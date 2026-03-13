@@ -20,6 +20,7 @@ BUILD_PRODUCTS_DIR="AudioFlow/.build/${BUILD_ARCH}-apple-macosx/${BUILD_CONFIGUR
 EXECUTABLE_PATH="${BUILD_PRODUCTS_DIR}/${APP_NAME}"
 SIGNING_DIR="$(mktemp -d "/tmp/audioflow-sign.XXXXXX")"
 SIGNED_BUNDLE_DIR="${SIGNING_DIR}/${APP_NAME}.app"
+SIGNING_IDENTITY="${AUDIOFLOW_SIGNING_IDENTITY:-}"
 
 cleanup() {
     rm -rf "${SIGNING_DIR}"
@@ -27,9 +28,28 @@ cleanup() {
 
 trap cleanup EXIT
 
+find_default_signing_identity() {
+    security find-identity -v -p codesigning 2>/dev/null \
+        | sed -n 's/.*"\(Apple Development:.*\)"/\1/p' \
+        | head -n 1
+}
+
+if [ -z "${SIGNING_IDENTITY}" ]; then
+    SIGNING_IDENTITY="$(find_default_signing_identity || true)"
+fi
+
+if [ -z "${SIGNING_IDENTITY}" ]; then
+    SIGNING_IDENTITY="-"
+fi
+
 echo "========================================"
 echo "  AudioFlow Build Script"
 echo "========================================"
+if [ "${SIGNING_IDENTITY}" = "-" ]; then
+    echo "Assinatura: ad-hoc (permissoes de Accessibility/Automation podem precisar ser reaprovadas a cada build)"
+else
+    echo "Assinatura: ${SIGNING_IDENTITY}"
+fi
 
 # Build com Swift Package Manager
 echo "[1/5] Compilando (${BUILD_CONFIGURATION}/${BUILD_ARCH})..."
@@ -214,7 +234,7 @@ xattr -cr "${SIGNED_BUNDLE_DIR}"
 codesign \
     --force \
     --deep \
-    --sign - \
+    --sign "${SIGNING_IDENTITY}" \
     --identifier "${BUNDLE_IDENTIFIER}" \
     --entitlements "${SIGNED_BUNDLE_DIR}/Contents/Resources/AudioFlow.entitlements" \
     "${SIGNED_BUNDLE_DIR}"
