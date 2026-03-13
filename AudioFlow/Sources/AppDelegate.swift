@@ -16,6 +16,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let transcriptionCommitCoordinator = TranscriptionCommitCoordinator()
     private var currentTranscription = ""
     private var pasteTargetApplication: NSRunningApplication?
+    private let recordingAccentColor = NSColor(
+        srgbRed: 0,
+        green: 122.0 / 255.0,
+        blue: 1,
+        alpha: 1
+    )
 
     // Debug file
     private static let debugLogPath = "/tmp/audioflow_debug.log"
@@ -412,8 +418,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         image.lockFocus()
 
-        // Use RED for recording state directly
-        NSColor.systemRed.setFill()
+        recordingAccentColor.setFill()
 
         // Bar definitions with base height and max height for animation
         let bars: [(x: CGFloat, baseHeight: CGFloat, maxHeight: CGFloat, width: CGFloat)] = [
