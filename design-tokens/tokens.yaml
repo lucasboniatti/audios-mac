@@ -1,4 +1,6 @@
 # AudioFlow Design Tokens - WITH LIGHT MODE
+# Source of Truth: edit this file and rebuild artifacts with `node scripts/build-tokens.js`
+# Generated outputs are derived artifacts and must not be edited manually
 # Version: 1.1.0
 # Generated: 2026-03-14
 # Design System: ÁudioFlow Mobile App
@@ -75,6 +77,10 @@ layers:
       dark-text-disabled:
         "$value": "#8E8E93"
         "$description": "Texto desabilitado dark mode"
+
+      dark-text-label:
+        "$value": "#999999"
+        "$description": "Labels e hints dark mode"
 
       # Text Colors - Light Mode
       light-text-primary:
@@ -436,6 +442,10 @@ layers:
         "$value": "{layers.core.color.dark-text-disabled}"
         "$description": "Texto desabilitado (dark mode)"
 
+      text-label-dark:
+        "$value": "{layers.core.color.dark-text-label}"
+        "$description": "Labels e hints (dark mode)"
+
       # Text - Light Mode
       text-primary-light:
         "$value": "{layers.core.color.light-text-primary}"
@@ -469,6 +479,14 @@ layers:
       interactive-primary-active:
         "$value": "{layers.core.color.primary-700}"
         "$description": "Active/Pressed state do primary"
+
+      interactive-primary-background:
+        "$value": "rgba(0, 122, 255, 0.10)"
+        "$description": "Background sutil para destaque do primary"
+
+      interactive-primary-border:
+        "$value": "rgba(0, 122, 255, 0.20)"
+        "$description": "Borda sutil para destaque do primary"
 
       # Border - Dark Mode
       border-subtle-dark:

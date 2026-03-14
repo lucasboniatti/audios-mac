@@ -312,6 +312,51 @@ phases:
           - frontend/styles.css
         effort: "M"
 
+  - phase: 8
+    name: "Design System & Shared UI Foundations"
+    priority: COULD
+    stories:
+      - story_id: "8.1"
+        title: "Formalizar design tokens compartilhados"
+        description: "Consolidar tokens.yaml como source of truth e garantir exports gerados para CSS, JSON, Tailwind e Swift"
+        acceptance_criteria:
+          - "Build de tokens gera artefatos válidos a partir de design-tokens/tokens.yaml"
+          - "Frontend consome tokens sem reintroduzir estilos hardcoded críticos"
+          - "Tokens Swift permanecem disponíveis para adoção incremental no app macOS"
+        files:
+          - design-tokens/tokens.yaml
+          - scripts/build-tokens.js
+          - frontend/styles.css
+        effort: "M"
+
+      - story_id: "8.2"
+        title: "Documentar catálogo visual e guidelines do design system"
+        description: "Publicar documentação local de uso dos tokens e componentes com Storybook e guias de contribuição"
+        acceptance_criteria:
+          - "Storybook local documenta tokens e componentes principais"
+          - "README do design system descreve fluxo de build, uso e governança"
+          - "Demo local do frontend referencia o design system compartilhado"
+        files:
+          - README_DESIGN_SYSTEM.md
+          - .storybook/main.js
+          - frontend/design-system-demo.html
+          - CONTRIBUTING.md
+        effort: "M"
+
+      - story_id: "8.3"
+        title: "Disponibilizar componentes compartilhados para web e Swift"
+        description: "Manter componentes reutilizáveis e assets de marca prontos para adoção incremental sem reescrever as superfícies existentes"
+        acceptance_criteria:
+          - "Componentes React ficam disponíveis para uso no frontend local"
+          - "Componentes Swift e tokens ficam disponíveis para novas superfícies do app"
+          - "Assets de marca e tokens permanecem consistentes entre web e macOS"
+        files:
+          - frontend/components/index.tsx
+          - AudioFlow/Sources/Components/AudioFlowComponents.swift
+          - AudioFlow/Sources/DesignTokens/AudioFlowColors.swift
+          - AudioFlow/Assets/logo.svg
+        effort: "M"
+
 # Test Strategy
 test_strategy:
   unit_tests:
@@ -395,13 +440,15 @@ timeline:
       estimated_effort: "4-6 horas"
     - phase: 7
       estimated_effort: "8-12 horas"
-  total_estimate: "32-50 horas"
+    - phase: 8
+      estimated_effort: "8-12 horas"
+  total_estimate: "40-62 horas"
   
 # Next Steps
 next_steps:
-  - action: "Criar epic brownfield do companion web"
+  - action: "Criar epic brownfield do design system compartilhado"
     command: "/aios-pm *create-epic"
-  - action: "Criar stories 7.1-7.3 a partir da fase 7"
+  - action: "Criar stories 8.1-8.3 a partir da fase 8"
     command: "/aios-sm *draft"
-  - action: "Iniciar implementação da story 7.1"
-    command: "/aios-dev *develop 7.1"
+  - action: "Iniciar implementação da story 8.1"
+    command: "/aios-dev *develop 8.1"

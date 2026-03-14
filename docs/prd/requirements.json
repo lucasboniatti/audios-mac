@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "AudioFlow",
-    "description": "App nativo macOS para transcrição de áudio via hotkey com clipboard automático e companion web local para histórico, analytics e organização pessoal",
+    "description": "App nativo macOS para transcrição de áudio via hotkey com clipboard automático, companion web local para histórico, analytics e organização pessoal, e base visual compartilhada por design tokens e componentes reutilizáveis",
     "version": "1.0.0",
     "status": "draft",
     "created_at": "2026-03-05"
@@ -80,6 +80,12 @@
       "title": "Exportação estruturada no frontend web",
       "description": "Permitir exportar transcrições do dashboard web em formatos estruturados",
       "format": "CSV e JSON"
+    },
+    "FR-014": {
+      "title": "Design system compartilhado",
+      "description": "Manter design tokens e componentes reutilizáveis para o companion web e futuras superfícies do AudioFlow",
+      "scope": "tokens.yaml como source of truth, exports CSS/JSON/Tailwind/Swift, catálogo visual local e componentes React/Swift",
+      "behavior": "Artefatos gerados podem ser reconstruídos a partir do source of truth sem reintroduzir estilos hardcoded"
     }
   },
   "non_functional_requirements": {
@@ -170,6 +176,12 @@
       "as_a": "usuário macOS",
       "i_want_to": "exportar transcrições estruturadas em CSV ou JSON",
       "so_that": "posso analisar ou reaproveitar meus dados fora do app"
+    },
+    {
+      "id": "US-012",
+      "as_a": "mantenedor do produto",
+      "i_want_to": "evoluir tokens e componentes compartilhados em um design system documentado",
+      "so_that": "posso manter consistência visual entre o companion web e futuras superfícies sem retrabalho"
     }
   ],
   "acceptance_criteria": {
@@ -186,7 +198,9 @@
     "AC-011": "Dashboard web mostra métricas derivadas do histórico local",
     "AC-012": "Favoritos e tags são persistidos em banco separado do CoreData",
     "AC-013": "Preferências do dashboard são reaplicadas entre sessões",
-    "AC-014": "Exportações CSV e JSON do frontend geram arquivos válidos"
+    "AC-014": "Exportações CSV e JSON do frontend geram arquivos válidos",
+    "AC-015": "Build de tokens gera artefatos válidos em CSS, JSON, Tailwind e Swift a partir de tokens.yaml",
+    "AC-016": "Storybook e demo local documentam tokens e componentes compartilhados para adoção incremental"
   },
   "constraints": {
     "CON-001": "MacOS 12.0+ (Monterey) mínimo para Speech Recognition nativo",
@@ -195,7 +209,8 @@
     "CON-004": "Idioma fixo: pt-BR (não multi-idioma no MVP)",
     "CON-005": "Frontend web pode ler AudioFlow.sqlite apenas em modo read-only",
     "CON-006": "Metadados mutáveis do frontend ficam em banco SQLite local separado (audioflow_design.db)",
-    "CON-007": "Autenticação atual do frontend é local, por senha fixa e sessão simples; provedores externos ficam fora do escopo atual"
+    "CON-007": "Autenticação atual do frontend é local, por senha fixa e sessão simples; provedores externos ficam fora do escopo atual",
+    "CON-008": "tokens.yaml permanece a fonte única de verdade do design system; arquivos *.generated.* são regeneráveis e não devem ser editados manualmente"
   },
   "moscow_prioritization": {
     "must_have": [
@@ -215,7 +230,8 @@
       "FR-010: Favoritos no frontend web",
       "FR-011: Tags para transcrições",
       "FR-012: Preferências do usuário no frontend web",
-      "FR-013: Exportação estruturada no frontend web"
+      "FR-013: Exportação estruturada no frontend web",
+      "FR-014: Design system compartilhado"
     ],
     "wont_have": [
       "Multi-idioma",
@@ -234,7 +250,8 @@
     "permissions": "Microfone + Speech Recognition (Solicitar no primeiro uso)",
     "web_companion": "Express + better-sqlite3 + WebSocket servindo dashboard local",
     "design_database": "SQLite separado (audioflow_design.db) para favoritos, tags e preferências",
-    "web_auth": "Sessões locais simples com token Bearer e senha local inicial"
+    "web_auth": "Sessões locais simples com token Bearer e senha local inicial",
+    "design_system": "tokens.yaml como source of truth com build Node gerando exports CSS/JSON/Tailwind/Swift, Storybook local e componentes compartilhados para web e SwiftUI"
   },
   "out_of_scope": [
     "Suporte a Windows/Linux",
@@ -246,6 +263,8 @@
     "Integração com outros apps",
     "Autenticação OAuth/Apple ID",
     "Atalhos customizáveis",
-    "Persistência de áudio"
+    "Persistência de áudio",
+    "Reescrita completa do menu bar app para adotar o design system de uma vez",
+    "Publicação externa obrigatória do Storybook nesta fase"
   ]
 }

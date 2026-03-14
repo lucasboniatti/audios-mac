@@ -12,11 +12,24 @@
  * </Card>
  */
 
-import React from 'react';
+import React, {
+  type CSSProperties,
+  type HTMLAttributes,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const cardStyles = {
+type CardVariant = 'default' | 'elevated' | 'interactive';
+
+type CardProps = HTMLAttributes<HTMLDivElement> & {
+  variant?: CardVariant;
+  children: ReactNode;
+  style?: CSSProperties;
+};
+
+const cardStyles: Record<CardVariant, CSSProperties> = {
   default: {
     background: tokens.components.card.background,
     border: `1px solid ${tokens.components.card.border}`,
@@ -52,15 +65,23 @@ export default function Card({
   onClick,
   className = '',
   style = {},
+  onMouseEnter,
+  onMouseLeave,
   ...props
-}) {
+}: CardProps) {
   const baseStyle = cardStyles[variant] || cardStyles.default;
 
-  const hoverStyle = variant === 'interactive' ? { background: 'rgba(255, 255, 255, 0.05)' } : {};
+  const hoverStyle: CSSProperties = variant === 'interactive'
+    ? { background: 'rgba(255, 255, 255, 0.05)' }
+    : {};
 
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     ...baseStyle,
     ...style,
+  };
+
+  const restoreCardStyle = (event: MouseEvent<HTMLDivElement>) => {
+    Object.assign(event.currentTarget.style, combinedStyle);
   };
 
   return (
@@ -70,11 +91,13 @@ export default function Card({
       style={combinedStyle}
       onMouseEnter={(e) => {
         if (variant === 'interactive') {
-          Object.assign(e.target.style, hoverStyle);
+          Object.assign(e.currentTarget.style, { ...combinedStyle, ...hoverStyle });
         }
+        onMouseEnter?.(e);
       }}
       onMouseLeave={(e) => {
-        Object.assign(e.target.style, baseStyle);
+        restoreCardStyle(e);
+        onMouseLeave?.(e);
       }}
       {...props}
     >

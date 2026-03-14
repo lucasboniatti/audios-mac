@@ -15,8 +15,16 @@ node_modules
 dist/
 build/
 .build/
+.swiftpm/
+storybook-static/
 *.log
 logs/
+# Generated design token compatibility artifacts.
+# Canonical outputs like tokens.css and tokens.tailwind.js are rebuilt from tokens.yaml
+# but remain visible for product/versioning decisions.
+design-tokens/*.generated.css
+design-tokens/*.generated.swift
+design-tokens/*.tailwind.generated.js
 
 # IDE & OS (AIOX)
 .DS_Store

@@ -9,28 +9,47 @@
  * </Avatar>
  */
 
-import React from 'react';
+import React, {
+  type CSSProperties,
+  type HTMLAttributes,
+  type ImgHTMLAttributes,
+  type MouseEventHandler,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const avatarSizes = {
+type AvatarSize = 'sm' | 'md' | 'lg';
+
+type AvatarProps = HTMLAttributes<HTMLDivElement> &
+  ImgHTMLAttributes<HTMLImageElement> & {
+    src?: string;
+    alt?: string;
+    size?: AvatarSize;
+    showEditButton?: boolean;
+    onEditClick?: MouseEventHandler<HTMLButtonElement>;
+    children?: ReactNode;
+    style?: CSSProperties;
+  };
+
+const avatarSizes: Record<AvatarSize, string> = {
   sm: tokens.components.avatar.sm,
   md: tokens.components.avatar.md,
   lg: tokens.components.avatar.lg,
 };
 
-const avatarStyle = {
+const avatarStyle: CSSProperties = {
   borderRadius: tokens.borderRadius.full,
   objectFit: 'cover',
   border: `2px solid rgba(0, 122, 255, 0.2)`,
 };
 
-const containerStyle = {
+const containerStyle: CSSProperties = {
   position: 'relative',
   display: 'inline-block',
 };
 
-const editButtonStyle = {
+const editButtonStyle: CSSProperties = {
   position: 'absolute',
   bottom: '0',
   right: '0',
@@ -56,10 +75,10 @@ export default function Avatar({
   className = '',
   style = {},
   ...props
-}) {
+}: AvatarProps) {
   const sizeValue = avatarSizes[size] || avatarSizes.md;
 
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     width: sizeValue,
     height: sizeValue,
     ...avatarStyle,

@@ -1,0 +1,48 @@
+schema: 1
+story: '8.1'
+story_title: 'Formalizar design tokens compartilhados'
+gate: PASS
+status_reason: 'O pipeline agora sincroniza o artefato Swift consumido pelo app macOS, o frontend estende o config Tailwind gerado e todos os gates revisados passaram sem achados remanescentes.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T19:25:24-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 97
+expires: '2026-03-28T19:25:24-03:00'
+
+evidence:
+  tests_reviewed: 6
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'A story atua no pipeline local de geracao de artefatos e nao introduz novas rotas, credenciais ou superficies externas.'
+  performance:
+    status: PASS
+    notes: 'Os gates executados passaram e o custo do build de tokens permaneceu baixo mesmo com a sincronizacao cross-surface.'
+  reliability:
+    status: PASS
+    notes: 'O build de tokens agora atualiza o arquivo Swift efetivamente compilado e a suite automatizada verifica a paridade entre o gerado e o consumido.'
+  maintainability:
+    status: PASS
+    notes: 'O frontend passou a estender o config Tailwind gerado, reduzindo drift entre a origem em tokens.yaml e o consumo real.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Adicionar regressao automatizada cobrindo também os demais artefatos Swift compartilhados, caso spacing e typography passem a ser gerados a partir de tokens.yaml.'
+      refs:
+        - 'AudioFlow/Sources/DesignTokens/AudioFlowColors.swift:1'
+        - 'AudioFlow/Sources/DesignTokens/AudioFlowTypography.swift:1'
+    - action: 'Adicionar smoke de build visual para garantir que futuras mudancas no config Tailwind continuem produzindo o CSS esperado no companion.'
+      refs:
+        - 'frontend/tailwind.config.js:1'
+        - 'frontend/build-css.js:15'

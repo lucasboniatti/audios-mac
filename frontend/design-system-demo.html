@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>AudioFlow Design System - Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/dist/styles.css"/>
+  <style>
+    body {
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      font-family: 'Public Sans', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .demo-section {
+      margin-bottom: 40px;
+    }
+    .demo-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--color-text-secondary);
+    }
+    .demo-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .demo-meta {
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 16px;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+    }
+    .demo-meta code {
+      font-family: 'Inter', monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Toggle Button -->
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span id="theme-icon">🌙</span>
+    <span id="theme-text">Light Mode</span>
+  </button>
+
+  <div style="max-width: 800px; margin: 0 auto;">
+    <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px;">
+      🎨 AudioFlow Design System
+    </h1>
+    <p style="color: var(--color-text-tertiary); margin-bottom: 40px;">
+      Demonstração dos componentes usando design tokens - Dark & Light Mode
+    </p>
+
+    <div class="demo-meta">
+      <strong style="display: block; margin-bottom: 8px;">Fluxo local recomendado</strong>
+      <p style="margin: 0 0 8px 0; color: var(--color-text-secondary);">
+        Use <code>npm run build</code> para regenerar tokens e CSS compartilhado. Para catálogo visual, rode <code>npm run storybook</code>. Este demo continua disponível pelo servidor local em <code>/design-system-demo.html</code>.
+      </p>
+      <p style="margin: 0; color: var(--color-text-tertiary);">
+        O objetivo aqui é servir como smoke visual rápido; o catálogo principal do design system fica no Storybook.
+      </p>
+    </div>
+
+    <div class="demo-section">
+      <h2 class="demo-title">Brand Assets Compartilhados</h2>
+      <div class="demo-grid" style="align-items: stretch;">
+        <div class="card" style="display: grid; gap: 12px; min-width: 220px;">
+          <strong style="font-size: 14px;">Logo principal</strong>
+          <div style="display: flex; align-items: center; justify-content: center; min-height: 120px; border-radius: 12px; background: #FFFFFF;">
+            <img src="/shared-assets/logo.svg" alt="AudioFlow logo principal" style="width: 120px; height: auto;">
+          </div>
+          <span style="font-size: 12px; color: var(--color-text-tertiary);">Mesmo asset usado como source of truth em <code>AudioFlow/Assets</code>.</span>
+        </div>
+        <div class="card" style="display: grid; gap: 12px; min-width: 220px;">
+          <strong style="font-size: 14px;">Logo transparente</strong>
+          <div style="display: flex; align-items: center; justify-content: center; min-height: 120px; border-radius: 12px; background: var(--color-surface);">
+            <img src="/shared-assets/logo-transparent.svg" alt="AudioFlow logo transparente" style="width: 120px; height: auto;">
+          </div>
+          <span style="font-size: 12px; color: var(--color-text-tertiary);">Web consome o mesmo arquivo por <code>/shared-assets/*</code>, sem precisar duplicar branding.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Botões</h2>
+      <div class="demo-grid">
+        <button class="btn-primary">Primary Button</button>
+        <button class="btn-secondary">Secondary Button</button>
+        <button class="btn-destructive">Destructive</button>
+      </div>
+    </div>
+
+    <!-- FAB Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Floating Action Button (FAB)</h2>
+      <div class="demo-grid">
+        <button class="fab">
+          <span class="material-symbols-outlined" style="font-size: 32px;">mic</span>
+        </button>
+      </div>
+      <p style="color: var(--color-text-tertiary); font-size: 12px; margin-top: 8px;">
+        ⭐ O glow azul é a assinatura visual do AudioFlow - use apenas no botão de gravar
+      </p>
+    </div>
+
+    <!-- Cards Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Cards</h2>
+      <div class="demo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        <div class="card">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">Card Default</h3>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">
+            Card padrão com border sutil e shadow leve
+          </p>
+        </div>
+
+        <div class="card-elevated">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">Card Elevado</h3>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">
+            Card com shadow mais forte para destaque
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chips Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Chips & Tags</h2>
+      <div class="demo-grid">
+        <span class="chip">Inovação <span style="margin-left: 8px; font-size: 10px; color: var(--color-primary); background: var(--color-elevated); padding: 2px 8px; border-radius: 9999px;">1,240x</span></span>
+        <span class="chip">Estratégia <span style="margin-left: 8px; font-size: 10px; color: var(--color-primary); background: var(--color-elevated); padding: 2px 8px; border-radius: 9999px;">982x</span></span>
+        <span class="chip">Feedback</span>
+      </div>
+    </div>
+
+    <!-- Filter Chips Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Filtros</h2>
+      <div class="demo-grid">
+        <button class="chip-filter active" onclick="this.classList.toggle('active')">Hoje</button>
+        <button class="chip-filter" onclick="this.classList.toggle('active')">Ontem</button>
+        <button class="chip-filter" onclick="this.classList.toggle('active')">Últimos 7 dias</button>
+        <button class="chip-filter" onclick="this.classList.toggle('active')">Este mês</button>
+      </div>
+    </div>
+
+    <!-- Input Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Inputs</h2>
+      <div style="max-width: 400px;">
+        <label class="text-label" style="display: block; margin-bottom: 8px;">Nome</label>
+        <input type="text" class="input-audioflow" placeholder="Digite seu nome..." style="width: 100%;">
+      </div>
+    </div>
+
+    <!-- Typography Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Tipografia</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <p style="font-size: 40px; font-weight: 700; margin: 0; line-height: 1;">Display Large (40px)</p>
+        <p style="font-size: 24px; font-weight: 700; margin: 0; line-height: 1.25;">Título Grande (24px)</p>
+        <p style="font-size: 16px; font-weight: 600; margin: 0; line-height: 1.25;">Subtítulo (16px)</p>
+        <p style="font-size: 14px; font-weight: 400; margin: 0; line-height: 1.25; color: var(--color-text-secondary);">Corpo de texto (14px) - Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        <p style="font-size: 10px; font-weight: 700; margin: 0; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-label);">LABEL UPPERCASE (10px)</p>
+      </div>
+    </div>
+
+    <!-- Colors Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Paleta de Cores</h2>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: #007AFF; border-radius: 12px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Primary</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);">#007AFF</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--color-background); border-radius: 12px; border: 1px solid var(--color-border-subtle);"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Background</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);" id="bg-value">#000000</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--color-surface); border-radius: 12px; border: 1px solid var(--color-border-subtle);"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Surface</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);" id="surface-value">#1C1C1E</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--color-elevated); border-radius: 12px; border: 1px solid var(--color-border-subtle);"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Elevated</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);" id="elevated-value">#2C2C2E</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Semantic Colors Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Cores Semânticas</h2>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: #10B981; border-radius: 12px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Success</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);">#10B981</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: #F59E0B; border-radius: 12px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Warning</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);">#F59E0B</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: #F43F5E; border-radius: 12px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0; color: var(--color-text-secondary);">Destructive</p>
+          <p style="font-size: 10px; margin: 4px 0 0 0; color: var(--color-text-tertiary);">#F43F5E</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacing Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Espaçamento (4px base)</h2>
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span style="width: 40px; font-size: 12px; color: var(--color-text-tertiary);">4px</span>
+          <div style="width: 4px; height: 20px; background: var(--color-primary); border-radius: 4px;"></div>
+          <span style="font-size: 12px; color: var(--color-text-secondary);">spacing-1</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span style="width: 40px; font-size: 12px; color: var(--color-text-tertiary);">8px</span>
+          <div style="width: 8px; height: 20px; background: var(--color-primary); border-radius: 4px;"></div>
+          <span style="font-size: 12px; color: var(--color-text-secondary);">spacing-2</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span style="width: 40px; font-size: 12px; color: var(--color-text-tertiary);">16px</span>
+          <div style="width: 16px; height: 20px; background: var(--color-primary); border-radius: 4px;"></div>
+          <span style="font-size: 12px; color: var(--color-text-secondary);">spacing-4</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span style="width: 40px; font-size: 12px; color: var(--color-text-tertiary);">24px</span>
+          <div style="width: 24px; height: 20px; background: var(--color-primary); border-radius: 4px;"></div>
+          <span style="font-size: 12px; color: var(--color-text-secondary);">spacing-6</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span style="width: 40px; font-size: 12px; color: var(--color-text-tertiary);">64px</span>
+          <div style="width: 64px; height: 20px; background: var(--color-primary); border-radius: 4px;"></div>
+          <span style="font-size: 12px; color: var(--color-text-secondary);">spacing-16 (FAB size)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Border Radius Section -->
+    <div class="demo-section">
+      <h2 class="demo-title">Border Radius</h2>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div style="width: 60px; height: 60px; background: var(--color-surface); border: 2px solid var(--color-primary); border-radius: 4px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0;">sm (4px)</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 60px; height: 60px; background: var(--color-surface); border: 2px solid var(--color-primary); border-radius: 8px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0;">md (8px)</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 60px; height: 60px; background: var(--color-surface); border: 2px solid var(--color-primary); border-radius: 12px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0;">lg (12px)</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 60px; height: 60px; background: var(--color-surface); border: 2px solid var(--color-primary); border-radius: 16px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0;">xl (16px)</p>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 60px; height: 60px; background: var(--color-surface); border: 2px solid var(--color-primary); border-radius: 9999px;"></div>
+          <p style="font-size: 12px; margin: 8px 0 0 0;">full (pill)</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--color-border-subtle); text-align: center; color: var(--color-text-tertiary); font-size: 12px;">
+      <p style="margin: 0;">AudioFlow Design System v1.2.0</p>
+      <p style="margin-top: 8px;">Catálogo local alinhado ao source of truth em <strong>design-tokens/tokens.yaml</strong>.</p>
+      <p style="margin-top: 8px;">Use Storybook para documentação principal e este HTML como smoke visual rápido.</p>
+    </div>
+  </div>
+
+  <script src="/audioflow-components.js"></script>
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      html.setAttribute('data-theme', newTheme);
+
+      // Update button text and icon
+      const themeIcon = document.getElementById('theme-icon');
+      const themeText = document.getElementById('theme-text');
+      themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+      themeText.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+
+      // Update color values display
+      const bgValue = document.getElementById('bg-value');
+      const surfaceValue = document.getElementById('surface-value');
+      const elevatedValue = document.getElementById('elevated-value');
+
+      if (newTheme === 'light') {
+        bgValue.textContent = '#F9FAFB';
+        surfaceValue.textContent = '#FFFFFF';
+        elevatedValue.textContent = '#FFFFFF';
+      } else {
+        bgValue.textContent = '#000000';
+        surfaceValue.textContent = '#1C1C1E';
+        elevatedValue.textContent = '#2C2C2E';
+      }
+
+      // Save preference
+      localStorage.setItem('audioflow-theme', newTheme);
+    }
+
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('audioflow-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const themeIcon = document.getElementById('theme-icon');
+      const themeText = document.getElementById('theme-text');
+      themeIcon.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+      themeText.textContent = savedTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    }
+  </script>
+</body>
+</html>

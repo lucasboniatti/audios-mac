@@ -1,0 +1,334 @@
+// AudioFlow Design Tokens - SCSS Variables
+// Version: 1.0.0 | Generated: 2026-03-13
+
+// ============================================================
+// CORE COLORS
+// ============================================================
+
+// Primary Brand
+$color-primary-500: #007AFF !default;
+
+// Dark Mode Backgrounds
+$color-background-dark: #000000 !default;
+$color-surface-dark: #1C1C1E !default;
+$color-surface-elevated: #2C2C2E !default;
+
+// Neutral Grays
+$color-neutral-100: #8E8E93 !default;
+$color-neutral-200: #999999 !default;
+
+// Semantic Colors
+$color-rose-500: #F43F5E !default;
+$color-rose-600: #E11D48 !default;
+
+// ============================================================
+// SEMANTIC COLORS
+// ============================================================
+
+// Backgrounds
+$color-background-primary: $color-background-dark !default;
+$color-background-surface: $color-surface-dark !default;
+$color-background-elevated: $color-surface-elevated !default;
+
+// Text
+$color-text-primary: #FFFFFF !default;
+$color-text-secondary: rgba(255, 255, 255, 0.8) !default;
+$color-text-tertiary: rgba(255, 255, 255, 0.6) !default;
+$color-text-disabled: $color-neutral-100 !default;
+$color-text-label: $color-neutral-200 !default;
+
+// Interactive
+$color-interactive-primary: $color-primary-500 !default;
+$color-interactive-primary-hover: #0056CC !default;
+$color-interactive-primary-active: #0044A8 !default;
+
+// Border
+$color-border-subtle: rgba(255, 255, 255, 0.05) !default;
+$color-border-default: rgba(255, 255, 255, 0.10) !default;
+$color-border-strong: rgba(255, 255, 255, 0.20) !default;
+
+// Destructive
+$color-destructive: $color-rose-500 !default;
+$color-destructive-hover: $color-rose-600 !default;
+$color-destructive-background: rgba(244, 63, 94, 0.10) !default;
+
+// ============================================================
+// SPACING (4px base)
+// ============================================================
+
+$spacing-0: 0px !default;
+$spacing-1: 4px !default;
+$spacing-2: 8px !default;
+$spacing-3: 12px !default;
+$spacing-4: 16px !default;
+$spacing-5: 20px !default;
+$spacing-6: 24px !default;
+$spacing-8: 32px !default;
+$spacing-10: 40px !default;
+$spacing-12: 48px !default;
+$spacing-14: 56px !default;
+$spacing-16: 64px !default;
+
+// Semantic Spacing
+$spacing-container-xs: $spacing-2 !default;
+$spacing-container-sm: $spacing-3 !default;
+$spacing-container-md: $spacing-4 !default;
+$spacing-container-lg: $spacing-6 !default;
+
+$spacing-gap-xs: $spacing-1 !default;
+$spacing-gap-sm: $spacing-2 !default;
+$spacing-gap-md: $spacing-3 !default;
+$spacing-gap-lg: $spacing-4 !default;
+
+// ============================================================
+// TYPOGRAPHY
+// ============================================================
+
+// Font Family
+$font-family-primary: 'Public Sans', sans-serif !default;
+$font-family-secondary: 'Inter', sans-serif !default;
+
+// Font Size
+$font-size-2xs: 9px !default;
+$font-size-xs: 10px !default;
+$font-size-sm: 11px !default;
+$font-size-base: 12px !default;
+$font-size-md: 13px !default;
+$font-size-lg: 14px !default;
+$font-size-xl: 15px !default;
+$font-size-2xl: 16px !default;
+$font-size-3xl: 18px !default;
+$font-size-4xl: 20px !default;
+$font-size-5xl: 24px !default;
+$font-size-6xl: 32px !default;
+$font-size-7xl: 40px !default;
+
+// Font Weight
+$font-weight-light: 300 !default;
+$font-weight-normal: 400 !default;
+$font-weight-medium: 500 !default;
+$font-weight-semibold: 600 !default;
+$font-weight-bold: 700 !default;
+
+// Line Height
+$line-height-tight: 1.0 !default;
+$line-height-normal: 1.25 !default;
+$line-height-relaxed: 1.5 !default;
+
+// Letter Spacing
+$letter-spacing-tight: -0.015em !default;
+$letter-spacing-normal: 0 !default;
+$letter-spacing-wide: 0.025em !default;
+$letter-spacing-wider: 0.05em !default;
+$letter-spacing-widest: 0.1em !default;
+
+// ============================================================
+// BORDER RADIUS
+// ============================================================
+
+$radius-none: 0px !default;
+$radius-sm: 4px !default;
+$radius-default: 6px !default;
+$radius-md: 8px !default;
+$radius-lg: 12px !default;
+$radius-xl: 16px !default;
+$radius-2xl: 24px !default;
+$radius-3xl: 32px !default;
+$radius-full: 9999px !default;
+
+// ============================================================
+// SHADOWS
+// ============================================================
+
+$shadow-none: none !default;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !default;
+$shadow-default: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !default;
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !default;
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !default;
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !default;
+$shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !default;
+
+// Brand Shadows
+$shadow-primary-glow: 0 0 20px rgba(0, 122, 255, 0.4) !default;
+$shadow-primary-lg: 0 10px 15px -3px rgba(0, 122, 255, 0.3) !default;
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+// Button
+$button-primary-bg: $color-interactive-primary !default;
+$button-primary-text: #FFFFFF !default;
+$button-primary-padding-y: $spacing-3 !default;
+$button-primary-padding-x: $spacing-6 !default;
+$button-primary-radius: $radius-lg !default;
+$button-primary-font-size: $font-size-lg !default;
+$button-primary-font-weight: $font-weight-bold !default;
+$button-primary-shadow: $shadow-primary-lg !default;
+
+$button-fab-width: $spacing-16 !default;
+$button-fab-height: $spacing-16 !default;
+$button-fab-radius: $radius-full !default;
+$button-fab-shadow: $shadow-primary-glow !default;
+$button-fab-icon-size: $font-size-6xl !default;
+
+// Card
+$card-bg: $color-background-surface !default;
+$card-border: $color-border-subtle !default;
+$card-radius: $radius-xl !default;
+$card-padding: $spacing-4 !default;
+$card-shadow: $shadow-sm !default;
+
+// Input
+$input-bg: rgba(255, 255, 255, 0.05) !default;
+$input-border: $color-border-subtle !default;
+$input-radius: $radius-md !default;
+$input-padding: $spacing-3 !default;
+$input-font-size: $font-size-xs !default;
+
+// Avatar
+$avatar-sm: $spacing-8 !default;
+$avatar-md: $spacing-14 !default;
+$avatar-lg: $spacing-24 !default;
+
+// Chip
+$chip-bg: $color-background-elevated !default;
+$chip-text: $color-text-primary !default;
+$chip-padding-y: $spacing-2 !default;
+$chip-padding-x: $spacing-4 !default;
+$chip-radius: $radius-full !default;
+$chip-font-size: $font-size-sm !default;
+
+// Icon
+$icon-sm: $font-size-base !default;
+$icon-md: $font-size-xl !default;
+$icon-lg: $font-size-4xl !default;
+$icon-xl: $font-size-6xl !default;
+
+// ============================================================
+// MIXINS
+// ============================================================
+
+// Button Primary
+@mixin button-primary {
+  background: $button-primary-bg;
+  color: $button-primary-text;
+  padding: $button-primary-padding-y $button-primary-padding-x;
+  border-radius: $button-primary-radius;
+  font-size: $button-primary-font-size;
+  font-weight: $button-primary-font-weight;
+  box-shadow: $button-primary-shadow;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-interactive-primary-hover;
+  }
+
+  &:active {
+    background: $color-interactive-primary-active;
+  }
+}
+
+// FAB Button
+@mixin button-fab {
+  width: $button-fab-width;
+  height: $button-fab-height;
+  border-radius: $button-fab-radius;
+  background: $button-primary-bg;
+  color: $button-primary-text;
+  box-shadow: $button-fab-shadow;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Card
+@mixin card {
+  background: $card-bg;
+  border: 1px solid $card-border;
+  border-radius: $card-radius;
+  padding: $card-padding;
+  box-shadow: $card-shadow;
+}
+
+// Input
+@mixin input {
+  background: $input-bg;
+  border: 1px solid $input-border;
+  border-radius: $input-radius;
+  padding: $input-padding;
+  font-size: $input-font-size;
+  font-family: $font-family-primary;
+  color: $color-text-primary;
+
+  &:focus {
+    border-color: $color-interactive-primary;
+    outline: none;
+  }
+
+  &:disabled {
+    color: $color-text-disabled;
+    cursor: not-allowed;
+  }
+}
+
+// Chip
+@mixin chip {
+  display: inline-flex;
+  align-items: center;
+  background: $chip-bg;
+  color: $chip-text;
+  padding: $chip-padding-y $chip-padding-x;
+  border-radius: $chip-radius;
+  font-size: $chip-font-size;
+}
+
+// ============================================================
+// FUNCTIONS
+// ============================================================
+
+// Get spacing value
+@function spacing($key) {
+  $map: (
+    0: $spacing-0,
+    1: $spacing-1,
+    2: $spacing-2,
+    3: $spacing-3,
+    4: $spacing-4,
+    5: $spacing-5,
+    6: $spacing-6,
+    8: $spacing-8,
+    10: $spacing-10,
+    12: $spacing-12,
+    14: $spacing-14,
+    16: $spacing-16,
+  );
+  @return map-get($map, $key);
+}
+
+// Get font size
+@function font-size($key) {
+  $map: (
+    '2xs': $font-size-2xs,
+    'xs': $font-size-xs,
+    'sm': $font-size-sm,
+    'base': $font-size-base,
+    'md': $font-size-md,
+    'lg': $font-size-lg,
+    'xl': $font-size-xl,
+    '2xl': $font-size-2xl,
+    '3xl': $font-size-3xl,
+    '4xl': $font-size-4xl,
+    '5xl': $font-size-5xl,
+    '6xl': $font-size-6xl,
+    '7xl': $font-size-7xl,
+  );
+  @return map-get($map, $key);
+}

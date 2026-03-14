@@ -1,0 +1,52 @@
+name: AudioFlow Design System Validation
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  validate-design-system:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Lint shared CSS contract
+        run: npm run lint
+
+      - name: Typecheck shared components
+        run: npm run typecheck
+
+      - name: Run local regression suite
+        run: npm test
+
+      - name: Build tokens and frontend CSS
+        run: npm run build
+
+      - name: Build Storybook catalog
+        run: npm run storybook:build
+
+      - name: Upload Storybook artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static/
+          retention-days: 7

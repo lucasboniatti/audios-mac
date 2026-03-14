@@ -13,11 +13,24 @@
  * </Button>
  */
 
-import React from 'react';
+import React, {
+  type ButtonHTMLAttributes,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const buttonStyles = {
+type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'fab';
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  children: ReactNode;
+  style?: CSSProperties;
+};
+
+const buttonStyles: Record<ButtonVariant, CSSProperties> = {
   primary: {
     background: tokens.colors.primary[500],
     color: '#FFFFFF',
@@ -72,6 +85,18 @@ const buttonStyles = {
   },
 };
 
+const hoverStyles: Record<ButtonVariant, CSSProperties> = {
+  primary: { background: tokens.colors.primary.hover },
+  secondary: { background: 'rgba(255, 255, 255, 0.1)' },
+  destructive: { background: tokens.colors.destructive.background },
+  fab: { transform: 'scale(1.05)' },
+};
+
+const disabledStyle: CSSProperties = {
+  opacity: 0.5,
+  cursor: 'not-allowed',
+};
+
 export default function Button({
   variant = 'primary',
   children,
@@ -80,26 +105,20 @@ export default function Button({
   type = 'button',
   className = '',
   style = {},
+  onMouseEnter,
+  onMouseLeave,
   ...props
-}) {
+}: ButtonProps) {
   const baseStyle = buttonStyles[variant] || buttonStyles.primary;
 
-  const hoverStyles = {
-    primary: { background: tokens.colors.primary.hover },
-    secondary: { background: 'rgba(255, 255, 255, 0.1)' },
-    destructive: { background: tokens.colors.destructive.background },
-    fab: { transform: 'scale(1.05)' },
-  };
-
-  const disabledStyle = {
-    opacity: 0.5,
-    cursor: 'not-allowed',
-  };
-
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     ...baseStyle,
     ...(disabled ? disabledStyle : {}),
     ...style,
+  };
+
+  const restoreButtonStyle = (event: MouseEvent<HTMLButtonElement>) => {
+    Object.assign(event.currentTarget.style, combinedStyle);
   };
 
   return (
@@ -110,14 +129,14 @@ export default function Button({
       className={className}
       style={combinedStyle}
       onMouseEnter={(e) => {
-        if (!disabled && hoverStyles[variant]) {
-          Object.assign(e.target.style, hoverStyles[variant]);
+        if (!disabled) {
+          Object.assign(e.currentTarget.style, hoverStyles[variant]);
         }
+        onMouseEnter?.(e);
       }}
       onMouseLeave={(e) => {
-        if (!disabled) {
-          Object.assign(e.target.style, baseStyle);
-        }
+        restoreButtonStyle(e);
+        onMouseLeave?.(e);
       }}
       {...props}
     >

@@ -1,0 +1,48 @@
+schema: 1
+story: '8.3'
+story_title: 'Disponibilizar componentes compartilhados para web e Swift'
+gate: PASS
+status_reason: 'Os entrypoints incrementais do web, o contrato compartilhado de brand assets e a base Swift ficaram coerentes entre si, e todos os gates revisados passaram sem achados bloqueantes.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T20:07:30-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 95
+expires: '2026-03-28T20:07:30-03:00'
+
+evidence:
+  tests_reviewed: 6
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'A story adiciona somente exposicao estatica de branding compartilhado e nao altera autenticacao, sessoes ou a regra read-only do companion.'
+  performance:
+    status: PASS
+    notes: 'Os gates passaram; permanecem apenas warnings de tamanho do bundle do Storybook, nao bloqueantes enquanto o catalogo seguir local.'
+  reliability:
+    status: PASS
+    notes: 'O web companion, o Storybook e os testes Swift apontam para o mesmo conjunto de assets em AudioFlow/Assets, reduzindo drift cross-surface.'
+  maintainability:
+    status: PASS
+    notes: 'A story deixou entrypoints claros para React, HTML sem build e Swift, permitindo adocao incremental sem reescrever as superfices atuais.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Se o bridge sem build em frontend/audioflow-components.js crescer em uso produtivo, alinhar seu subconjunto de tokens ao artefato canonico gerado para evitar drift manual.'
+      refs:
+        - 'frontend/audioflow-components.js:1'
+        - 'frontend/lib/tokens.js:1'
+    - action: 'Avaliar reducao de bundle ou publish strategy caso o Storybook deixe de ser apenas catalogo local, para eliminar os warnings atuais de asset size.'
+      refs:
+        - '.storybook/main.js:1'
+        - 'package.json:6'

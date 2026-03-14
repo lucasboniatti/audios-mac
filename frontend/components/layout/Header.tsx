@@ -8,11 +8,24 @@
  * </Header>
  */
 
-import React from 'react';
+import React, {
+  type CSSProperties,
+  type HTMLAttributes,
+  type MouseEventHandler,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const headerStyle = {
+type HeaderProps = HTMLAttributes<HTMLElement> & {
+  title?: string;
+  showBackButton?: boolean;
+  onBackClick?: MouseEventHandler<HTMLButtonElement>;
+  children?: ReactNode;
+  style?: CSSProperties;
+};
+
+const headerStyle: CSSProperties = {
   position: 'sticky',
   top: 0,
   zIndex: 50,
@@ -25,13 +38,13 @@ const headerStyle = {
   fontFamily: tokens.typography.fontFamily.primary,
 };
 
-const leftSectionStyle = {
+const leftSectionStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: tokens.spacing[2],
 };
 
-const logoStyle = {
+const logoStyle: CSSProperties = {
   width: tokens.spacing[10],
   height: tokens.spacing[10],
   display: 'flex',
@@ -41,7 +54,7 @@ const logoStyle = {
   fontSize: tokens.typography.fontSize['4xl'],
 };
 
-const titleStyle = {
+const titleStyle: CSSProperties = {
   fontSize: tokens.typography.fontSize['2xl'],
   fontWeight: tokens.typography.fontWeight.bold,
   letterSpacing: tokens.typography.letterSpacing.tight,
@@ -49,7 +62,7 @@ const titleStyle = {
   margin: 0,
 };
 
-const backButtonStyle = {
+const backButtonStyle: CSSProperties = {
   width: tokens.spacing[8],
   height: tokens.spacing[8],
   display: 'flex',
@@ -64,7 +77,7 @@ const backButtonStyle = {
   fontSize: tokens.typography.fontSize.xl,
 };
 
-const rightSectionStyle = {
+const rightSectionStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: tokens.spacing[4],
@@ -78,7 +91,7 @@ export default function Header({
   className = '',
   style = {},
   ...props
-}) {
+}: HeaderProps) {
   return (
     <header
       className={className}
@@ -91,10 +104,10 @@ export default function Header({
             onClick={onBackClick}
             style={backButtonStyle}
             onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = 'transparent';
+              e.currentTarget.style.background = 'transparent';
             }}
           >
             ←

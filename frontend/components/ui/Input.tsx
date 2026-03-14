@@ -10,18 +10,40 @@
  * />
  */
 
-import React, { useState } from 'react';
+import React, {
+  type ChangeEventHandler,
+  type CSSProperties,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useState,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const inputContainerStyle = {
+type InputType = 'text' | 'email' | 'password' | 'number';
+
+type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'style' | 'type' | 'value'> & {
+  label?: string;
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  placeholder?: string;
+  type?: InputType;
+  icon?: ReactNode;
+  hint?: string;
+  disabled?: boolean;
+  error?: boolean;
+  className?: string;
+  style?: CSSProperties;
+};
+
+const inputContainerStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: tokens.spacing[1],
   fontFamily: tokens.typography.fontFamily.primary,
 };
 
-const labelStyle = {
+const labelStyle: CSSProperties = {
   fontSize: tokens.typography.fontSize.xs,
   fontWeight: tokens.typography.fontWeight.bold,
   color: tokens.colors.text.label,
@@ -30,7 +52,7 @@ const labelStyle = {
   paddingLeft: tokens.spacing[1],
 };
 
-const inputWrapperStyle = {
+const inputWrapperStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: tokens.spacing[3],
@@ -41,7 +63,7 @@ const inputWrapperStyle = {
   transition: 'border-color 0.2s ease',
 };
 
-const inputStyle = {
+const inputStyle: CSSProperties = {
   background: 'transparent',
   border: 'none',
   outline: 'none',
@@ -52,12 +74,12 @@ const inputStyle = {
   fontFamily: tokens.typography.fontFamily.primary,
 };
 
-const iconStyle = {
+const iconStyle: CSSProperties = {
   color: 'rgba(255, 255, 255, 0.8)',
   fontSize: tokens.typography.fontSize.lg,
 };
 
-const hintStyle = {
+const hintStyle: CSSProperties = {
   fontSize: tokens.typography.fontSize['2xs'],
   color: tokens.colors.text.label,
   fontStyle: 'italic',
@@ -77,23 +99,23 @@ export default function Input({
   className = '',
   style = {},
   ...props
-}) {
+}: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
-  const focusStyle = {
+  const focusStyle: CSSProperties = {
     borderColor: tokens.colors.primary[500],
   };
 
-  const errorStyle = {
+  const errorStyle: CSSProperties = {
     borderColor: tokens.colors.destructive.default,
   };
 
-  const disabledStyle = {
+  const disabledStyle: CSSProperties = {
     opacity: 0.5,
     cursor: 'not-allowed',
   };
 
-  const combinedWrapperStyle = {
+  const combinedWrapperStyle: CSSProperties = {
     ...inputWrapperStyle,
     ...(isFocused ? focusStyle : {}),
     ...(error ? errorStyle : {}),

@@ -1,0 +1,25 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-no-px"],
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "color": ["/^#(?!007AFF|000000|1C1C1E|2C2C2E|8E8E93|999999|F43F5E|E11D48)/"],
+      "/^background/": ["/^#(?!007AFF|000000|1C1C1E|2C2C2E)/"],
+      "/^border-color/": ["/^#[0-9A-Fa-f]{3,6}$/"]
+    },
+    "declaration-property-unit-disallowed-list": {
+      "/^(margin|padding|width|height|min-width|max-width|min-height|max-height)$/": ["px"],
+      "font-size": ["px"],
+      "border-radius": ["px"]
+    },
+    "color-no-hex": null,
+    "color-named": "never",
+    "selector-class-pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.css", "**/*.scss"],
+      "customSyntax": "postcss-scss"
+    }
+  ]
+}

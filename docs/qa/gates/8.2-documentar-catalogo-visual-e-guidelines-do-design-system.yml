@@ -1,0 +1,48 @@
+schema: 1
+story: '8.2'
+story_title: 'Documentar catálogo visual e guidelines do design system'
+gate: PASS
+status_reason: 'A documentacao, o CI e o Storybook local agora apontam para o mesmo fluxo real do workspace, e os gates revisados passaram sem achados bloqueantes.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T19:56:30-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 95
+expires: '2026-03-28T19:56:30-03:00'
+
+evidence:
+  tests_reviewed: 6
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'A story atua em documentacao, catalogo local e pipeline de build, sem introduzir novos endpoints, segredos ou superficie remota adicional.'
+  performance:
+    status: PASS
+    notes: 'npm run storybook:build passou; restam apenas warnings de tamanho do bundle do catalogo, o que nao bloqueia por se tratar de artefato local e nao runtime do produto.'
+  reliability:
+    status: PASS
+    notes: 'Os comandos documentados em README, CONTRIBUTING, CI e package.json convergem para o mesmo fluxo real, e o typecheck passou com o toolchain que o Storybook efetivamente usa.'
+  maintainability:
+    status: PASS
+    notes: 'A story reduziu drift entre docs, scripts e stories do catalogo, e endureceu a tipagem dos componentes compartilhados para evitar regressao silenciosa no workspace.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Avaliar bundle splitting ou reduzir dependencias do catalogo se o Storybook passar a ser publicado remotamente, para eliminar os warnings de asset size.'
+      refs:
+        - '.storybook/main.js:1'
+        - 'package.json:6'
+    - action: 'Adicionar smoke visual automatizado para o HTML demo, mantendo o Storybook como catalogo principal e o demo como validacao rapida de regressao visual.'
+      refs:
+        - 'frontend/design-system-demo.html:1'
+        - 'README_DESIGN_SYSTEM.md:42'

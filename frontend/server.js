@@ -25,6 +25,7 @@ const DESIGN_DB_PATH = path.join(
 // Config file for persistent port storage
 const CONFIG_DIR = path.join(os.homedir(), '.audioflow');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+const SHARED_ASSETS_DIR = path.resolve(__dirname, '../AudioFlow/Assets');
 
 // Production mode detection
 const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.argv.includes('--production');
@@ -128,6 +129,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+app.use('/shared-assets', express.static(SHARED_ASSETS_DIR));
 
 // --- Auth Middleware ---
 function requireAuth(req, res, next) {

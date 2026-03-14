@@ -8,11 +8,20 @@
  * </FAB>
  */
 
-import React from 'react';
+import React, {
+  type ButtonHTMLAttributes,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const fabStyle = {
+type FABProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode;
+  style?: CSSProperties;
+};
+
+const fabStyle: CSSProperties = {
   width: tokens.components.button.fab.width,
   height: tokens.components.button.fab.height,
   borderRadius: tokens.components.button.fab.borderRadius,
@@ -35,18 +44,26 @@ export default function FAB({
   disabled = false,
   className = '',
   style = {},
+  onMouseEnter,
+  onMouseLeave,
+  onMouseDown,
+  onMouseUp,
   ...props
-}) {
-  const disabledStyle = {
+}: FABProps) {
+  const disabledStyle: CSSProperties = {
     opacity: 0.5,
     cursor: 'not-allowed',
   };
 
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     ...fabStyle,
     ...(disabled ? disabledStyle : {}),
     ...style,
   };
+
+  const defaultTransform = typeof combinedStyle.transform === 'string'
+    ? combinedStyle.transform
+    : 'scale(1)';
 
   return (
     <button
@@ -56,21 +73,25 @@ export default function FAB({
       style={combinedStyle}
       onMouseEnter={(e) => {
         if (!disabled) {
-          e.target.style.transform = 'scale(1.05)';
+          e.currentTarget.style.transform = 'scale(1.05)';
         }
+        onMouseEnter?.(e);
       }}
       onMouseLeave={(e) => {
-        e.target.style.transform = 'scale(1)';
+        e.currentTarget.style.transform = defaultTransform;
+        onMouseLeave?.(e);
       }}
       onMouseDown={(e) => {
         if (!disabled) {
-          e.target.style.transform = 'scale(0.95)';
+          e.currentTarget.style.transform = 'scale(0.95)';
         }
+        onMouseDown?.(e);
       }}
       onMouseUp={(e) => {
         if (!disabled) {
-          e.target.style.transform = 'scale(1.05)';
+          e.currentTarget.style.transform = 'scale(1.05)';
         }
+        onMouseUp?.(e);
       }}
       {...props}
     >

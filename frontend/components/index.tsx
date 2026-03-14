@@ -1,20 +1,61 @@
 /**
  * AudioFlow Component Library
- * Central export for all components
+ * Central export for incremental adoption in React-based surfaces.
  */
 
-// UI Components
-export { default as Button } from './ui/Button';
-export { default as Card } from './ui/Card';
-export { default as Input } from './ui/Input';
-export { default as Chip } from './ui/Chip';
-export { default as Avatar } from './ui/Avatar';
-export { default as FAB } from './ui/FAB';
+import Button from './ui/Button';
+import Card from './ui/Card';
+import Input from './ui/Input';
+import Chip from './ui/Chip';
+import Avatar from './ui/Avatar';
+import FAB from './ui/FAB';
+import Header from './layout/Header';
+import BottomNav, { BottomNavItem } from './layout/BottomNav';
+import tokens from '../lib/tokens';
+import brandAssets, { brandMetadata } from '../lib/brand-assets';
 
-// Layout Components
-export { default as Header } from './layout/Header';
-export { default as BottomNav, BottomNavItem } from './layout/BottomNav';
+const ui = {
+  Button,
+  Card,
+  Input,
+  Chip,
+  Avatar,
+  FAB,
+};
 
-// Design Tokens
-export { default as tokens } from '../lib/tokens';
+const layout = {
+  Header,
+  BottomNav,
+  BottomNavItem,
+};
+
+export {
+  Avatar,
+  BottomNav,
+  BottomNavItem,
+  Button,
+  Card,
+  Chip,
+  FAB,
+  Header,
+  Input,
+  brandAssets,
+  brandMetadata,
+  tokens,
+};
+
 export * from '../lib/tokens';
+export * from '../lib/brand-assets';
+
+export const audioFlowReactComponents = ui;
+export const audioFlowLayoutComponents = layout;
+
+export const audioFlowComponentLibrary = {
+  ui,
+  layout,
+  tokens,
+  brandAssets,
+  brandMetadata,
+};
+
+export default audioFlowComponentLibrary;

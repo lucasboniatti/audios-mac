@@ -10,11 +10,31 @@
  * </BottomNav>
  */
 
-import React from 'react';
+import React, {
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+} from 'react';
 import PropTypes from 'prop-types';
 import tokens from '../../lib/tokens';
 
-const navStyle = {
+type BottomNavItemProps = {
+  id: string;
+  label?: string;
+  icon: ReactNode;
+  isActive?: boolean;
+  onClick: (id: string) => void;
+  isFAB?: boolean;
+};
+
+type BottomNavProps = HTMLAttributes<HTMLElement> & {
+  activeItem?: string;
+  onItemClick: (id: string) => void;
+  children: ReactNode;
+  style?: CSSProperties;
+};
+
+const navStyle: CSSProperties = {
   position: 'fixed',
   bottom: 0,
   left: 0,
@@ -30,7 +50,7 @@ const navStyle = {
   fontFamily: tokens.typography.fontFamily.primary,
 };
 
-const navItemStyle = {
+const navItemStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -43,40 +63,49 @@ const navItemStyle = {
   padding: `${tokens.spacing[1]} ${tokens.spacing[3]}`,
 };
 
-const activeItemStyle = {
+const activeItemStyle: CSSProperties = {
   color: tokens.colors.primary[500],
 };
 
-const iconStyle = {
+const iconStyle: CSSProperties = {
   fontSize: tokens.typography.fontSize['6xl'],
 };
 
-const labelStyle = {
+const labelStyle: CSSProperties = {
   fontSize: tokens.typography.fontSize.xs,
   fontWeight: tokens.typography.fontWeight.medium,
 };
 
-const fabContainerStyle = {
+const fabContainerStyle: CSSProperties = {
   position: 'relative',
   top: `-${tokens.spacing[6]}`,
 };
 
-export function BottomNavItem({ id, label, icon, isActive, onClick, isFAB = false }) {
+export function BottomNavItem({
+  id,
+  label,
+  icon,
+  isActive,
+  onClick,
+  isFAB = false,
+}: BottomNavItemProps) {
   if (isFAB) {
+    const fabButtonStyle: CSSProperties = {
+      ...navItemStyle,
+      width: tokens.spacing[16],
+      height: tokens.spacing[16],
+      borderRadius: tokens.borderRadius.full,
+      background: tokens.colors.primary[500],
+      color: '#FFFFFF',
+      boxShadow: tokens.shadows.primaryGlow,
+      border: `4px solid ${tokens.colors.background.dark}`,
+    };
+
     return (
       <div style={fabContainerStyle}>
         <button
           onClick={() => onClick(id)}
-          style={{
-            ...navItemStyle,
-            width: tokens.spacing[16],
-            height: tokens.spacing[16],
-            borderRadius: tokens.borderRadius.full,
-            background: tokens.colors.primary[500],
-            color: '#FFFFFF',
-            boxShadow: tokens.shadows.primaryGlow,
-            border: `4px solid ${tokens.colors.background.dark}`,
-          }}
+          style={fabButtonStyle}
         >
           <span style={{ fontSize: tokens.typography.fontSize['6xl'] }}>{icon}</span>
         </button>
@@ -84,7 +113,7 @@ export function BottomNavItem({ id, label, icon, isActive, onClick, isFAB = fals
     );
   }
 
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     ...navItemStyle,
     ...(isActive ? activeItemStyle : {}),
   };
@@ -116,7 +145,7 @@ export default function BottomNav({
   className = '',
   style = {},
   ...props
-}) {
+}: BottomNavProps) {
   return (
     <nav
       className={className}
@@ -124,7 +153,7 @@ export default function BottomNav({
       {...props}
     >
       {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
+        if (React.isValidElement<BottomNavItemProps>(child)) {
           return React.cloneElement(child, {
             isActive: child.props.id === activeItem,
             onClick: onItemClick,
