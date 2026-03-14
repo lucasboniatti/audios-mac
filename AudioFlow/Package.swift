@@ -16,7 +16,13 @@ let package = Package(
         .executableTarget(
             name: "AudioFlow",
             path: "Sources",
-            exclude: ["Info.plist"],
+            exclude: [
+                "Info.plist",
+                "AppDelegate 2.swift",
+                "ClipboardService 2.swift",
+                "HotkeyController 2.swift",
+                "MenuBuilder 2.swift"
+            ],
             linkerSettings: [
                 .linkedFramework("Cocoa"),
                 .linkedFramework("AVFoundation"),

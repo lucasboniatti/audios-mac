@@ -29,9 +29,8 @@ class MenuBuilder {
         let recordItem = NSMenuItem(
             title: "Gravar",
             action: #selector(AppDelegate.toggleRecording),
-            keyEquivalent: HotkeyConfiguration.menuKeyEquivalent
+            keyEquivalent: ""
         )
-        recordItem.keyEquivalentModifierMask = HotkeyConfiguration.menuModifiers
         recordItem.target = target
         menu.addItem(recordItem)
 
@@ -147,7 +146,7 @@ class MenuBuilder {
         let searchItem = NSMenuItem(
             title: "Buscar no Histórico...",
             action: #selector(AppDelegate.showSearchPanel),
-            keyEquivalent: "f"
+            keyEquivalent: ""
         )
         searchItem.target = target
         menu.addItem(searchItem)
@@ -172,9 +171,8 @@ class MenuBuilder {
         let stopItem = NSMenuItem(
             title: "Parar Gravação",
             action: #selector(AppDelegate.toggleRecording),
-            keyEquivalent: HotkeyConfiguration.menuKeyEquivalent
+            keyEquivalent: ""
         )
-        stopItem.keyEquivalentModifierMask = HotkeyConfiguration.menuModifiers
         stopItem.target = target
         menu.addItem(stopItem)
 
