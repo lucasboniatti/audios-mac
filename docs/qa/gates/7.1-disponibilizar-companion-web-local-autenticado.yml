@@ -1,0 +1,44 @@
+schema: 1
+story: '7.1'
+story_title: 'Disponibilizar companion web local autenticado'
+gate: FAIL
+status_reason: 'Os fluxos HTTP e realtime agora compartilham a mesma validacao de sessao: o WebSocket exige token valido no handshake e o logout encerra os sockets da sessao. Os gates automatizados revisados passaram sem novos achados bloqueantes.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T18:02:26-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 96
+expires: '2026-03-28T18:02:26-03:00'
+
+evidence:
+  tests_reviewed: 4
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'O WebSocket agora exige token valido no handshake e o logout fecha conexoes da mesma sessao.'
+  performance:
+    status: PASS
+    notes: 'Nenhum problema de performance bloqueante identificado na revisao estatica.'
+  reliability:
+    status: PASS
+    notes: 'Os checks de sintaxe, typecheck e regressao estao verdes; nao restaram falhas conhecidas no fluxo de sessao.'
+  maintainability:
+    status: PASS
+    notes: 'A autenticacao de HTTP e WebSocket agora reaproveita o mesmo parsing e a mesma fonte de sessao.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Validar manualmente em navegador real o reconnect do WebSocket apos reinicio do servidor.'
+      refs:
+        - 'frontend/auth.js:138'
+        - 'frontend/server.js:299'

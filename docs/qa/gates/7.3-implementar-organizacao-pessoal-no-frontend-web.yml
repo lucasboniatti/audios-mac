@@ -1,0 +1,44 @@
+schema: 1
+story: '7.3'
+story_title: 'Implementar organizacao pessoal no frontend web'
+gate: PASS
+status_reason: 'A escrita de metadados agora valida a existencia da transcricao e da tag antes de associar registros, e a exclusao de tags remove os vinculos antigos. Os gates automatizados revisados passaram sem achados remanescentes.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T18:02:26-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 96
+expires: '2026-03-28T18:02:26-03:00'
+
+evidence:
+  tests_reviewed: 4
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'As rotas HTTP de metadados continuam atras de requireAuth.'
+  performance:
+    status: PASS
+    notes: 'Nenhum problema de performance bloqueante apareceu na revisao estatica.'
+  reliability:
+    status: PASS
+    notes: 'A associacao de tags agora falha cedo quando a transcricao ou a tag nao existem, evitando metadados orfaos.'
+  maintainability:
+    status: PASS
+    notes: 'A limpeza dos vinculos de tags reduz risco de lixo historico no design DB.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Adicionar teste de integridade cobrindo associacao invalida e exclusao de tag com vinculos existentes.'
+      refs:
+        - 'frontend/server.js:671'
+        - 'tests/frontend-quality.test.mjs'

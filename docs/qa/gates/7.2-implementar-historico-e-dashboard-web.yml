@@ -1,0 +1,44 @@
+schema: 1
+story: '7.2'
+story_title: 'Implementar historico e dashboard web'
+gate: PASS
+status_reason: 'A superficie web agora respeita o historico read-only e o contrato de dados foi endurecido para tratar ZTEXT ausente com seguranca em listagem, dashboard e exportacao. Os gates automatizados revisados passaram sem novos bloqueios.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T18:02:26-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 95
+expires: '2026-03-28T18:02:26-03:00'
+
+evidence:
+  tests_reviewed: 4
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'As rotas HTTP principais continuam protegidas por requireAuth.'
+  performance:
+    status: PASS
+    notes: 'Nenhum gargalo bloqueante apareceu na revisao estatica.'
+  reliability:
+    status: PASS
+    notes: 'O fluxo read-only agora e explicito e o backend normaliza texto ausente antes de alimentar historico, dashboard e exportacao.'
+  maintainability:
+    status: PASS
+    notes: 'O contrato de dados ficou mais defensivo ao centralizar a normalizacao de texto no backend.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Executar smoke manual em navegador real para confirmar downloads autenticados e refresh por WebSocket em ambiente fora do sandbox.'
+      refs:
+        - 'frontend/dashboard.html:544'
+        - 'frontend/server.js:299'

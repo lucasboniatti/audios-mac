@@ -1,14 +1,14 @@
 {
   "project": {
     "name": "AudioFlow",
-    "description": "App nativo macOS para transcrição de áudio via hotkey com clipboard automático",
+    "description": "App nativo macOS para transcrição de áudio via hotkey com clipboard automático e companion web local para histórico, analytics e organização pessoal",
     "version": "1.0.0",
     "status": "draft",
     "created_at": "2026-03-05"
   },
   "vision": {
-    "problem_statement": "Transcrever áudio rapidamente sem abrir apps ou janelas, com resultado direto no clipboard",
-    "solution": "Menu bar app que captura áudio via hotkey, transcreve nativamente e copia texto automaticamente",
+    "problem_statement": "Transcrever áudio rapidamente sem abrir apps ou janelas, com resultado direto no clipboard, mas ainda com dificuldade para revisar, buscar e organizar o histórico fora do menu bar",
+    "solution": "Menu bar app que captura áudio via hotkey, transcreve nativamente e copia texto automaticamente, além de expor um companion web local para consulta, dashboard e organização do histórico",
     "target_user": "Usuários macOS que precisam de ditado rápido para documentação, mensagens e notas"
   },
   "functional_requirements": {
@@ -49,6 +49,37 @@
       "title": "Menu bar app",
       "description": "Rodar exclusivamente em background como menu bar app",
       "constraints": "Sem janela principal visível, apenas menu dropdown"
+    },
+    "FR-008": {
+      "title": "Dashboard web local",
+      "description": "Disponibilizar um companion web local conectado ao banco do app para consulta do histórico e métricas",
+      "views": "Gravações, Dashboard e Favoritos",
+      "integration": "Leitura read-only do CoreData via Node.js/SQLite"
+    },
+    "FR-009": {
+      "title": "Acesso autenticado ao frontend local",
+      "description": "Proteger o frontend web local com autenticação por sessão antes de liberar páginas protegidas",
+      "behavior": "Login local com senha, emissão de token e verificação de sessão nas rotas da API"
+    },
+    "FR-010": {
+      "title": "Favoritos no frontend web",
+      "description": "Permitir marcar e listar transcrições favoritas sem alterar o banco gerenciado pelo CoreData",
+      "storage": "SQLite local separado para metadados do frontend"
+    },
+    "FR-011": {
+      "title": "Tags para transcrições",
+      "description": "Permitir criar tags e associá-las às transcrições no frontend web",
+      "storage": "SQLite local separado para metadados do frontend"
+    },
+    "FR-012": {
+      "title": "Preferências do usuário no frontend web",
+      "description": "Persistir preferências visuais e de interação do dashboard web",
+      "scope": "theme_mode, accent_color, font_size_multiplier, auto_paste_enabled e sound_feedback_enabled"
+    },
+    "FR-013": {
+      "title": "Exportação estruturada no frontend web",
+      "description": "Permitir exportar transcrições do dashboard web em formatos estruturados",
+      "format": "CSV e JSON"
     }
   },
   "non_functional_requirements": {
@@ -109,6 +140,36 @@
       "as_a": "usuário macOS",
       "i_want_to": "exportar transcrições em TXT",
       "so_that": "posso arquivar ou compartilhar meu histórico"
+    },
+    {
+      "id": "US-007",
+      "as_a": "usuário macOS",
+      "i_want_to": "acessar um dashboard web local com login",
+      "so_that": "posso revisar minhas transcrições com mais contexto do que no menu bar"
+    },
+    {
+      "id": "US-008",
+      "as_a": "usuário macOS",
+      "i_want_to": "ver métricas e histórico no navegador",
+      "so_that": "posso identificar volume, frequência e padrões de uso"
+    },
+    {
+      "id": "US-009",
+      "as_a": "usuário macOS",
+      "i_want_to": "marcar favoritos e organizar transcrições com tags",
+      "so_that": "posso encontrar rapidamente conteúdos importantes"
+    },
+    {
+      "id": "US-010",
+      "as_a": "usuário macOS",
+      "i_want_to": "personalizar tema e preferências do dashboard",
+      "so_that": "a experiência web reflita meu uso e preferências"
+    },
+    {
+      "id": "US-011",
+      "as_a": "usuário macOS",
+      "i_want_to": "exportar transcrições estruturadas em CSV ou JSON",
+      "so_that": "posso analisar ou reaproveitar meus dados fora do app"
     }
   ],
   "acceptance_criteria": {
@@ -119,13 +180,22 @@
     "AC-005": "Histórico mostra últimas 10 transcrições com timestamp",
     "AC-006": "Busca filtra transcrições em tempo real",
     "AC-007": "Export gera arquivo TXT válido",
-    "AC-008": "Áudio é descartado após transcrição (não persiste)"
+    "AC-008": "Áudio é descartado após transcrição (não persiste)",
+    "AC-009": "Frontend web local exige autenticação antes de acessar páginas protegidas",
+    "AC-010": "Histórico web lista transcrições e atualiza em tempo real",
+    "AC-011": "Dashboard web mostra métricas derivadas do histórico local",
+    "AC-012": "Favoritos e tags são persistidos em banco separado do CoreData",
+    "AC-013": "Preferências do dashboard são reaplicadas entre sessões",
+    "AC-014": "Exportações CSV e JSON do frontend geram arquivos válidos"
   },
   "constraints": {
     "CON-001": "MacOS 12.0+ (Monterey) mínimo para Speech Recognition nativo",
     "CON-002": "Swift/SwiftUI nativo (não Electron ou frameworks multi-plataforma)",
     "CON-003": "Hotkey fixo: Fn + Espaço (não customizável no MVP)",
-    "CON-004": "Idioma fixo: pt-BR (não multi-idioma no MVP)"
+    "CON-004": "Idioma fixo: pt-BR (não multi-idioma no MVP)",
+    "CON-005": "Frontend web pode ler AudioFlow.sqlite apenas em modo read-only",
+    "CON-006": "Metadados mutáveis do frontend ficam em banco SQLite local separado (audioflow_design.db)",
+    "CON-007": "Autenticação atual do frontend é local, por senha fixa e sessão simples; provedores externos ficam fora do escopo atual"
   },
   "moscow_prioritization": {
     "must_have": [
@@ -136,16 +206,24 @@
     ],
     "should_have": [
       "FR-004: Histórico de transcrições (10 itens)",
-      "FR-005: Busca no histórico"
+      "FR-005: Busca no histórico",
+      "FR-008: Dashboard web local",
+      "FR-009: Acesso autenticado ao frontend local"
     ],
     "could_have": [
-      "FR-006: Export TXT"
+      "FR-006: Export TXT",
+      "FR-010: Favoritos no frontend web",
+      "FR-011: Tags para transcrições",
+      "FR-012: Preferências do usuário no frontend web",
+      "FR-013: Exportação estruturada no frontend web"
     ],
     "wont_have": [
       "Multi-idioma",
       "Atalhos customizáveis",
       "Cloud sync (iCloud)",
-      "Gravação de áudio persistente"
+      "Gravação de áudio persistente",
+      "Autenticação OAuth/Apple ID",
+      "Escrita direta no CoreData pelo frontend"
     ]
   },
   "technical_notes": {
@@ -153,15 +231,20 @@
     "menu_bar": "NSStatusItem com NSMenu",
     "hotkey": "Fn + Espaço funciona como toggle (start/stop)",
     "storage": "CoreData com SQLite backend",
-    "permissions": "Microfone + Speech Recognition (Solicitar no primeiro uso)"
+    "permissions": "Microfone + Speech Recognition (Solicitar no primeiro uso)",
+    "web_companion": "Express + better-sqlite3 + WebSocket servindo dashboard local",
+    "design_database": "SQLite separado (audioflow_design.db) para favoritos, tags e preferências",
+    "web_auth": "Sessões locais simples com token Bearer e senha local inicial"
   },
   "out_of_scope": [
     "Suporte a Windows/Linux",
     "Multi-idioma",
     "Cloud sync",
+    "Cloud sync do dashboard web",
     "Edição de transcrições",
     "Compartilhamento direto",
     "Integração com outros apps",
+    "Autenticação OAuth/Apple ID",
     "Atalhos customizáveis",
     "Persistência de áudio"
   ]

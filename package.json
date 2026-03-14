@@ -1,0 +1,65 @@
+{
+  "name": "@audioflow/design-system",
+  "version": "1.0.0",
+  "description": "AudioFlow Design System - Component library and design tokens",
+  "main": "frontend/components/index.tsx",
+  "scripts": {
+    "tokens:build": "node scripts/build-tokens.js",
+    "tokens:validate": "node -e \"require('./design-tokens/tokens.json')\"",
+    "lint": "node scripts/lint-frontend-css.mjs",
+    "lint:fix": "npm run lint -- --fix",
+    "typecheck": "npx tsc --project tsconfig.json",
+    "test": "node --test tests/frontend-quality.test.mjs",
+    "test:a11y": "echo \"Accessibility tests - implement with axe-core\"",
+    "build": "npm run tokens:build && npm --prefix frontend run build:css"
+  },
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "component-library",
+    "audioflow",
+    "react",
+    "swift",
+    "swiftui"
+  ],
+  "author": "AudioFlow Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/addon-links": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-webpack5": "^8.0.0",
+    "@types/react": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "js-yaml": "^4.1.0",
+    "postcss": "^8.4.38",
+    "postcss-scss": "^4.0.9",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stylelint": "^16.2.1",
+    "stylelint-config-standard": "^36.0.0",
+    "stylelint-no-px": "^1.0.1",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/audioflow/design-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/audioflow/design-system/issues"
+  },
+  "homepage": "https://audioflow.app/design-system"
+}

@@ -1,0 +1,642 @@
+@import "tailwindcss";
+
+/* ============================================================
+   AUDIOFLOW DESIGN SYSTEM - COMPONENT CLASSES
+   Version: 1.1.0 - With Light Mode Support
+   ============================================================ */
+
+/* Import design tokens */
+@import "../design-tokens/tokens.css";
+
+/* Theme Base Styles */
+body {
+  font-family: var(--font-family-secondary);
+  -webkit-tap-highlight-color: transparent;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar {
+  width: var(--spacing-1);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: var(--radius-full);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+/* Button Primary - Same for both modes */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: rgb(255 255 255);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  box-shadow: var(--shadow-primary-lg);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-primary:active {
+  background-color: var(--color-primary-active);
+}
+
+/* Button Secondary - Theme-aware */
+.btn-secondary {
+  background-color: var(--color-elevated);
+  color: var(--color-text-primary);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background-color: rgba(243, 244, 246, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Button Destructive */
+.btn-destructive {
+  background-color: transparent;
+  color: var(--color-destructive);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  border: 2px solid var(--color-border-strong);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-destructive:hover {
+  background-color: var(--color-destructive-bg);
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
+/* Card - Theme-aware */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.card-elevated {
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="light"] .card-elevated {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+/* Input - Theme-aware */
+.input-audioflow {
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+[data-theme="light"] .input-audioflow {
+  background-color: rgb(255 255 255);
+  border-color: var(--color-border-default);
+}
+
+.input-audioflow:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.input-audioflow::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+   CHIPS
+   ============================================================ */
+
+/* Chip - Theme-aware */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-elevated);
+  color: var(--color-text-primary);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .chip {
+  background-color: rgb(255 255 255);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.chip:hover {
+  background-color: var(--color-surface);
+}
+
+/* Filter Chip */
+.chip-filter {
+  background-color: var(--color-surface);
+  color: var(--color-text-tertiary);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.chip-filter.active {
+  background-color: var(--color-primary);
+  color: rgb(255 255 255);
+}
+
+/* ============================================================
+   FAB - FLOATING ACTION BUTTON
+   ============================================================ */
+
+/* FAB - Same for both modes */
+.fab {
+  width: var(--spacing-16);
+  height: var(--spacing-16);
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: rgb(255 255 255);
+  box-shadow: var(--shadow-primary-glow);
+  border: 4px solid var(--color-background);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  font-size: var(--font-size-6xl);
+}
+
+.fab:hover {
+  transform: scale(1.05);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================
+   TOAST & ANIMATIONS
+   ============================================================ */
+
+.toast {
+  animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 1.7s forwards;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+.text-label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-label);
+}
+
+.shadow-primary-glow {
+  box-shadow: var(--shadow-primary-glow);
+}
+
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--color-elevated);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.header-audioflow {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+[data-theme="light"] .header-audioflow {
+  border-bottom-color: var(--color-border-default);
+}
+
+/* ============================================================
+   BOTTOM NAVIGATION
+   ============================================================ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  padding: var(--spacing-2) var(--spacing-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 50;
+}
+
+[data-theme="light"] .bottom-nav {
+  border-top-color: var(--color-border-default);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .bottom-nav {
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================
+   USER AVATAR
+   ============================================================ */
+
+.user-avatar {
+  width: var(--spacing-8);
+  height: var(--spacing-8);
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .user-avatar {
+  background-color: rgba(243, 244, 246, 1);
+  border-color: var(--color-border-default);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   EXPORT BUTTONS
+   ============================================================ */
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: calc(var(--spacing-3) / 2) var(--spacing-3);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-export-csv {
+  background-color: rgba(59, 130, 246, 0.10);
+  color: var(--color-primary);
+}
+
+.btn-export-csv:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+.btn-export-json {
+  background-color: rgba(16, 185, 129, 0.10);
+  color: var(--color-success);
+}
+
+.btn-export-json:hover {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="light"] .btn-export-csv {
+  background-color: var(--color-primary-bg);
+}
+
+[data-theme="light"] .btn-export-csv:hover {
+  background-color: rgba(0, 122, 255, 0.16);
+}
+
+[data-theme="light"] .btn-export-json {
+  background-color: var(--color-success-bg);
+}
+
+[data-theme="light"] .btn-export-json:hover {
+  background-color: rgba(16, 185, 129, 0.18);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-16) var(--spacing-4);
+}
+
+.empty-state-icon {
+  font-size: var(--spacing-16);
+  margin-bottom: var(--spacing-4);
+  opacity: 0.3;
+}
+
+.empty-state-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-2);
+}
+
+.empty-state-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-disabled);
+}
+
+/* ============================================================
+   SEARCH BAR
+   ============================================================ */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background-color: var(--color-elevated);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-subtle);
+}
+
+[data-theme="light"] .search-bar {
+  background-color: rgba(243, 244, 246, 1);
+  border-color: var(--color-border-default);
+}
+
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.search-bar input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+   TRANSCRIPTION CARD
+   ============================================================ */
+
+.transcription-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+[data-theme="light"] .transcription-card {
+  border-color: var(--color-border-default);
+}
+
+.transcription-item {
+  padding: var(--spacing-4);
+  display: flex;
+  gap: var(--spacing-4);
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.transcription-item:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .transcription-item:hover {
+  background-color: rgba(249, 250, 251, 1);
+}
+
+.transcription-item + .transcription-item {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+[data-theme="light"] .transcription-item + .transcription-item {
+  border-top-color: rgba(243, 244, 246, 1);
+}
+
+/* ============================================================
+   DATE GROUP
+   ============================================================ */
+
+.date-group {
+  margin-top: var(--spacing-6);
+}
+
+.date-group:first-child {
+  margin-top: 0;
+}
+
+.date-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.date-group-title {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-label);
+}
+
+.date-group-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-surface);
+  padding: calc(var(--spacing-3) / 2) var(--spacing-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .date-group-badge {
+  border-color: var(--color-border-default);
+}
+
+/* ============================================================
+   STATS CARD
+   ============================================================ */
+
+.stats-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .stats-card {
+  border-color: var(--color-border-default);
+}
+
+/* ============================================================
+   TOP WORDS CHIP
+   ============================================================ */
+
+.top-word-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background-color: rgba(59, 130, 246, 0.10);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(59, 130, 246, 0.20);
+  box-shadow: var(--shadow-sm);
+}
+
+.top-word-text {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.top-word-count {
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  background-color: var(--color-surface);
+  padding: calc(var(--spacing-1) / 2) var(--spacing-2);
+  border-radius: var(--radius-full);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   CHART BAR COLORS
+   ============================================================ */
+
+.chart-bar-today {
+  background-color: var(--color-primary);
+}
+
+.chart-bar-default {
+  background-color: rgba(0, 122, 255, 0.20);
+}
+
+[data-theme="light"] .chart-bar-default {
+  background-color: rgba(0, 122, 255, 0.30);
+}
+
+/* Chart bar CSS variable for JS use */
+:root {
+  --chart-bar-default: rgba(0, 122, 255, 0.20);
+}
+
+[data-theme="light"] {
+  --chart-bar-default: rgba(0, 122, 255, 0.30);
+}

@@ -268,6 +268,50 @@ phases:
           - PerformanceTests.swift
         effort: "M"
 
+  - phase: 7
+    name: "Web Companion Dashboard"
+    priority: SHOULD
+    stories:
+      - story_id: "7.1"
+        title: "Disponibilizar companion web local autenticado"
+        description: "Expor frontend web local com autenticação por sessão, rotas protegidas e atualização em tempo real"
+        acceptance_criteria:
+          - "Usuário acessa frontend local via navegador após login com senha local"
+          - "Rotas protegidas bloqueiam acesso sem token válido"
+          - "WebSocket notifica novas transcrições em tempo real"
+        files:
+          - frontend/server.js
+          - frontend/login.html
+          - frontend/auth.js
+        effort: "M"
+
+      - story_id: "7.2"
+        title: "Implementar histórico e dashboard web"
+        description: "Renderizar histórico, busca, estatísticas e exportações estruturadas no frontend web com leitura read-only do CoreData"
+        acceptance_criteria:
+          - "Página Gravações lista transcrições e busca em tempo real"
+          - "Dashboard mostra métricas e filtros derivados do histórico"
+          - "Exportações CSV e JSON geram arquivos válidos"
+        files:
+          - frontend/index.html
+          - frontend/dashboard.html
+          - frontend/server.js
+        effort: "M"
+
+      - story_id: "7.3"
+        title: "Implementar organização pessoal no frontend web"
+        description: "Persistir favoritos, tags e preferências do usuário em banco local separado sem modificar o CoreData"
+        acceptance_criteria:
+          - "Usuário marca e remove favoritos no frontend"
+          - "Usuário cria tags e associa tags a transcrições"
+          - "Preferências de tema e interface persistem entre sessões"
+        files:
+          - frontend/favorites.html
+          - frontend/theme.js
+          - frontend/server.js
+          - frontend/styles.css
+        effort: "M"
+
 # Test Strategy
 test_strategy:
   unit_tests:
@@ -349,13 +393,15 @@ timeline:
       estimated_effort: "2-4 horas"
     - phase: 6
       estimated_effort: "4-6 horas"
-  total_estimate: "24-38 horas"
+    - phase: 7
+      estimated_effort: "8-12 horas"
+  total_estimate: "32-50 horas"
   
 # Next Steps
 next_steps:
-  - action: "Criar epic no backlog"
+  - action: "Criar epic brownfield do companion web"
     command: "/aios-pm *create-epic"
-  - action: "Criar stories a partir do plano"
-    command: "/aios-sm *create-story"
-  - action: "Iniciar implementação da story 1.1"
-    command: "/aios-dev *develop 1.1"
+  - action: "Criar stories 7.1-7.3 a partir da fase 7"
+    command: "/aios-sm *draft"
+  - action: "Iniciar implementação da story 7.1"
+    command: "/aios-dev *develop 7.1"

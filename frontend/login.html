@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ÁudioFlow - Login</title>
+  <link rel="stylesheet" href="/dist/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="/theme.js"></script>
+  <script src="/auth.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-elevated) 100%);
+    }
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+    .login-subtitle {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      margin-top: 8px;
+    }
+    .login-error {
+      color: var(--color-destructive);
+      background-color: var(--color-destructive-bg);
+      font-size: var(--font-size-sm);
+      text-align: center;
+      padding: 8px;
+      border-radius: var(--radius-lg);
+    }
+    .login-info {
+      background-color: var(--color-primary-bg, rgba(0, 122, 255, 0.10));
+      border: 1px solid var(--color-primary-border, rgba(0, 122, 255, 0.20));
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-top: 24px;
+    }
+    .login-info p {
+      font-size: var(--font-size-xs);
+      color: var(--color-primary);
+    }
+    .login-info code {
+      background-color: var(--color-primary-bg, rgba(0, 122, 255, 0.15));
+      color: var(--color-primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .theme-btn {
+      padding: 8px;
+      color: var(--color-text-tertiary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .theme-btn:hover {
+      color: var(--color-text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; max-width: 400px; padding: 16px;">
+    <!-- Logo -->
+    <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 32px;">
+      <div class="login-logo">
+        <span class="material-symbols-outlined" style="font-size: 40px;">graphic_eq</span>
+      </div>
+      <h1 style="font-size: 24px; font-weight: 700; text-align: center;">ÁudioFlow</h1>
+      <p class="login-subtitle">Seu assistente de transcrição</p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="card-elevated" style="padding: 24px;">
+      <div style="margin-bottom: 16px;">
+        <label for="password" class="text-label" style="display: block; margin-bottom: 8px;">Senha</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Digite a senha"
+          class="input-audioflow"
+          style="width: 100%;"
+        />
+      </div>
+
+      <div id="error" class="login-error hidden"></div>
+
+      <button onclick="handleLogin()" class="btn-primary" style="width: 100%;">
+        <span id="login-btn-text">Entrar</span>
+      </button>
+    </div>
+
+    <!-- Info -->
+    <div class="login-info">
+      <p>
+        <strong>Demo:</strong> Use a senha padrão<br/>
+        <code>audioflow123</code>
+      </p>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <div style="margin-top: 24px; display: flex; justify-content: center;">
+      <button onclick="toggleDarkMode()" class="theme-btn">
+        <span class="material-symbols-outlined" id="theme-icon">light_mode</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Update theme icon on load
+    function updateThemeIcon() {
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = isDarkMode() ? 'light_mode' : 'dark_mode';
+    }
+    updateThemeIcon();
+
+    // Override toggle to update icon
+    const origToggle = window.toggleDarkMode;
+    window.toggleDarkMode = function() {
+      origToggle();
+      updateThemeIcon();
+    };
+
+    // Enter key submits
+    document.getElementById('password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    async function initLoginPage() {
+      const isValidSession = await AuthAPI.verifyToken();
+      if (isValidSession) {
+        window.location.href = '/';
+        return;
+      }
+
+      document.getElementById('password').focus();
+    }
+
+    async function handleLogin() {
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('error');
+      const btnEl = document.getElementById('login-btn-text');
+
+      if (!password) {
+        errorEl.textContent = 'Digite a senha';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      btnEl.textContent = 'Entrando...';
+      const result = await AuthAPI.login(password);
+
+      if (result.success) {
+        window.location.href = '/';
+      } else {
+        errorEl.textContent = result.error || 'Erro ao fazer login';
+        errorEl.classList.remove('hidden');
+        btnEl.textContent = 'Entrar';
+      }
+    }
+
+    initLoginPage();
+  </script>
+</body>
+</html>

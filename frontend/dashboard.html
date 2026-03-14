@@ -1,106 +1,457 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>ÁudioFlow - Dashboard</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="/dist/styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: { "primary": "#4f46e5" },
-          fontFamily: { "sans": ["Inter", "sans-serif"] },
-        },
-      },
-    }
-  </script>
+  <script src="/theme.js"></script>
+  <script src="/auth.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 33.333%;
+      color: var(--color-text-tertiary);
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: var(--color-primary);
+    }
+    .nav-icon {
+      font-size: 32px;
+    }
+    .nav-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .filter-btn {
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background-color: var(--color-elevated);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border-subtle);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn:hover {
+      background-color: var(--color-surface);
+    }
+    .filter-btn.active {
+      background-color: var(--color-primary);
+      color: var(--color-text-primary);
+      border-color: var(--color-primary);
+    }
+    .loading-spinner {
+      color: var(--color-text-disabled);
+      font-size: 32px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Date Picker Modal */
+    .date-picker-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .date-picker-overlay.open {
+      display: flex;
+    }
+    .date-picker-modal {
+      width: 100%;
+      max-width: 430px;
+      background: var(--color-surface);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .date-picker-handle {
+      width: 48px;
+      height: 6px;
+      background: var(--color-border-default);
+      border-radius: 3px;
+      margin: 12px auto;
+    }
+    .date-picker-header {
+      padding: 0 24px 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .date-picker-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .date-picker-subtitle {
+      font-size: 14px;
+      color: var(--color-text-tertiary);
+      margin-top: 4px;
+    }
+    .date-picker-content {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .date-picker-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .date-picker-nav button {
+      padding: 8px;
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .date-picker-nav button:hover {
+      background: var(--color-elevated);
+    }
+    .date-picker-month {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .date-picker-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .date-picker-weekdays span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-tertiary);
+      padding: 8px 0;
+    }
+    .date-picker-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .date-picker-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      background: transparent;
+    }
+    .date-picker-day:hover:not(.disabled):not(.other-month) {
+      background: var(--color-elevated);
+    }
+    .date-picker-day.other-month {
+      color: var(--color-text-disabled);
+    }
+    .date-picker-day.disabled {
+      color: var(--color-text-disabled);
+      cursor: not-allowed;
+    }
+    .date-picker-day.selected {
+      background: var(--color-primary);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+    .date-picker-day.in-range {
+      background: var(--color-primary-bg);
+      color: var(--color-primary);
+    }
+    .date-picker-day.today {
+      border: 2px solid var(--color-primary);
+    }
+    .date-picker-summary {
+      padding: 16px 24px;
+      background: var(--color-primary-bg);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .date-picker-summary-item {
+      flex: 1;
+    }
+    .date-picker-summary-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-tertiary);
+    }
+    .date-picker-summary-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-top: 4px;
+    }
+    .date-picker-arrow {
+      color: var(--color-primary);
+    }
+    .date-picker-actions {
+      padding: 16px 24px 32px;
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+    .date-picker-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .date-picker-btn-cancel {
+      background: var(--color-elevated);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border-subtle);
+    }
+    .date-picker-btn-cancel:hover {
+      background: var(--color-surface);
+    }
+    .date-picker-btn-apply {
+      background: var(--color-primary);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+    .date-picker-btn-apply:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    }
+    .date-picker-btn-apply:active {
+      transform: translateY(0);
+    }
+
+    /* Chart Bar Interactive Styles */
+    .chart-bar-container {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .chart-bar-container:hover {
+      transform: scale(1.05);
+    }
+    .chart-bar-container.selected {
+      transform: scale(1.08);
+    }
+    .chart-bar-bar {
+      transition: all 0.2s ease;
+    }
+    .chart-bar-container.selected .chart-bar-bar {
+      box-shadow: 0 0 12px var(--color-primary);
+    }
+    .chart-bar-container.in-range .chart-bar-bar {
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.5);
+    }
+    .chart-bar-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-elevated);
+      color: var(--color-text-primary);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+    .chart-bar-container:hover .chart-bar-tooltip {
+      opacity: 1;
+    }
+    .chart-selection-info {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-primary);
+      color: #FFFFFF;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .chart-selection-info.visible {
+      opacity: 1;
+    }
   </style>
 </head>
-<body class="bg-[#F9F9F9] text-slate-900 min-h-screen flex flex-col">
+<body>
 
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-10 h-10 flex items-center justify-center text-indigo-600">
-        <span class="material-symbols-outlined text-3xl font-bold">graphic_eq</span>
+  <header class="header-audioflow">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+        <span class="material-symbols-outlined" style="font-size: 32px; font-weight: bold;">graphic_eq</span>
       </div>
-      <h1 class="text-xl font-bold tracking-tight text-slate-900">ÁudioFlow</h1>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">ÁudioFlow</h1>
     </div>
-    <div class="flex items-center gap-4">
-      <button class="flex cursor-pointer items-center justify-center rounded-xl h-10 w-10 bg-transparent text-slate-900">
-        <span class="material-symbols-outlined">notifications</span>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="text-align: right; display: none;" class="sm:block">
+        <p class="text-label" id="username-display">Usuário</p>
+        <button onclick="handleLogout()" style="font-size: 12px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;">Sair</button>
+      </div>
+      <button onclick="toggleDarkMode()" style="padding: 8px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;">
+        <span class="material-symbols-outlined" id="theme-icon">light_mode</span>
       </button>
-      <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
-        <span class="text-xs font-semibold text-gray-600">L</span>
+      <div class="user-avatar">
+        <span id="user-initial">U</span>
       </div>
     </div>
   </header>
 
   <!-- Content -->
-  <main class="flex-1 overflow-y-auto pb-24">
+  <main style="flex: 1; overflow-y: auto; padding-bottom: 96px;">
+
+    <!-- Export Buttons -->
+    <div style="display: flex; gap: 8px; padding: 16px; justify-content: center;">
+      <a href="/api/export/csv" download class="btn-export btn-export-csv" data-export-format="csv">
+        <span class="material-symbols-outlined" style="font-size: 14px;">file_download</span> Exportar CSV
+      </a>
+      <a href="/api/export/json" download class="btn-export btn-export-json" data-export-format="json">
+        <span class="material-symbols-outlined" style="font-size: 14px;">file_download</span> Exportar JSON
+      </a>
+    </div>
+
+    <section style="padding: 0 16px 16px;">
+      <div class="stats-card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <p style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 500; text-transform: uppercase;">Preferências do Companion</p>
+            <h2 style="color: var(--color-text-primary); font-size: 18px; font-weight: 700; margin-top: 4px;">Tema e interface persistidos</h2>
+          </div>
+          <span id="preferences-status" style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 600;">Carregando...</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+          <label style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 600;">Tema</span>
+            <select id="pref-theme-mode" class="input-audioflow">
+              <option value="system">Sistema</option>
+              <option value="dark">Escuro</option>
+              <option value="light">Claro</option>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 600;">Cor de destaque</span>
+            <input id="pref-accent-color" type="color" value="#007AFF" style="width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--color-border-subtle); background: var(--color-elevated); padding: 6px; cursor: pointer;"/>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 600;">Escala de fonte</span>
+            <input id="pref-font-size" type="range" min="0.8" max="1.5" step="0.1" value="1" style="width: 100%; accent-color: var(--color-primary);"/>
+            <span id="pref-font-size-value" style="color: var(--color-text-primary); font-size: 12px; font-weight: 600;">100%</span>
+          </label>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+          <label style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 13px; font-weight: 500;">
+            <input id="pref-auto-paste" type="checkbox" style="accent-color: var(--color-primary);"/>
+            <span>Lembrar auto paste</span>
+          </label>
+          <label style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 13px; font-weight: 500;">
+            <input id="pref-sound-feedback" type="checkbox" style="accent-color: var(--color-primary);"/>
+            <span>Lembrar feedback sonoro</span>
+          </label>
+        </div>
+      </div>
+    </section>
 
     <!-- Period Filters -->
-    <div class="flex gap-3 p-4 overflow-x-auto no-scrollbar" id="filters">
-      <button data-filter="today" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl px-4 bg-primary text-white text-sm font-medium">Hoje</button>
-      <button data-filter="yesterday" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Ontem</button>
-      <button data-filter="3days" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Últimos 3 dias</button>
-      <button data-filter="7days" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Últimos 7 dias</button>
-      <button data-filter="week" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Esta semana</button>
-      <button data-filter="month" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Este mês</button>
-      <button data-filter="all" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium">Todo período</button>
+    <div style="display: flex; gap: 12px; padding: 0 16px 16px; overflow-x: auto;" class="no-scrollbar" id="filters">
+      <button data-filter="today" class="filter-btn active">Hoje</button>
+      <button data-filter="yesterday" class="filter-btn">Ontem</button>
+      <button data-filter="3days" class="filter-btn">Últimos 3 dias</button>
+      <button data-filter="7days" class="filter-btn">Últimos 7 dias</button>
+      <button data-filter="week" class="filter-btn">Esta semana</button>
+      <button data-filter="month" class="filter-btn">Este mês</button>
+      <button data-filter="custom" class="filter-btn" id="custom-filter-btn">
+        <span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> Personalizado
+      </button>
     </div>
 
     <!-- Weekly Chart -->
-    <div class="px-4 py-2">
-      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <div class="flex flex-col gap-1 mb-6">
-          <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Métrica Semanal</p>
-          <p class="text-slate-900 text-lg font-bold">Palavras por dia</p>
-          <div class="flex items-center gap-2">
-            <p class="text-slate-900 text-3xl font-bold" id="stat-weekly-total">--</p>
-            <span id="stat-weekly-trend" class="text-sm font-bold flex items-center"></span>
+    <div style="padding: 0 16px 8px;">
+      <div class="stats-card" style="padding: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px;">
+          <p style="color: var(--color-text-tertiary); font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">Métrica Semanal</p>
+          <p style="color: var(--color-text-primary); font-size: 18px; font-weight: 700;">Palavras por dia</p>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <p style="color: var(--color-text-primary); font-size: 32px; font-weight: 700;" id="stat-weekly-total">--</p>
+            <span id="stat-weekly-trend" style="font-size: 14px; font-weight: 700; display: flex; align-items: center;"></span>
           </div>
         </div>
-        <div class="grid grid-cols-7 gap-3 items-end h-40 px-2" id="chart-bars"></div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; align-items: end; height: 160px; padding: 0 8px;" id="chart-bars"></div>
       </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-2 gap-4 p-4">
-      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-        <div class="flex flex-col gap-1">
-          <p class="text-slate-500 text-xs font-medium uppercase">Total de Palavras</p>
-          <p class="text-slate-900 text-2xl font-bold" id="stat-total-words">--</p>
-          <p class="text-slate-400 text-sm font-medium" id="stat-total-count"></p>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 16px;">
+      <div class="stats-card">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <p style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 500; text-transform: uppercase;">Total de Palavras</p>
+          <p style="color: var(--color-text-primary); font-size: 24px; font-weight: 700;" id="stat-total-words">--</p>
+          <p style="color: var(--color-text-disabled); font-size: 14px; font-weight: 500;" id="stat-total-count"></p>
         </div>
       </div>
-      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-        <div class="flex flex-col gap-1">
-          <p class="text-slate-500 text-xs font-medium uppercase">Média Diária</p>
-          <p class="text-slate-900 text-2xl font-bold" id="stat-avg-daily">--</p>
-          <p id="stat-avg-trend" class="text-sm font-medium flex items-center gap-1"></p>
+      <div class="stats-card">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <p style="color: var(--color-text-tertiary); font-size: 12px; font-weight: 500; text-transform: uppercase;">Média Diária</p>
+          <p style="color: var(--color-text-primary); font-size: 24px; font-weight: 700;" id="stat-avg-daily">--</p>
+          <p id="stat-avg-trend" style="font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 4px;"></p>
         </div>
       </div>
     </div>
 
     <!-- Top Words -->
-    <div class="px-4 py-4">
-      <div class="flex justify-between items-center mb-4 px-1">
-        <h3 class="text-slate-900 text-lg font-bold">Palavras mais faladas</h3>
+    <div style="padding: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px;">
+        <h3 style="color: var(--color-text-primary); font-size: 18px; font-weight: 700;">Palavras mais faladas</h3>
       </div>
-      <div class="flex flex-wrap gap-3 py-2" id="top-words">
-        <div class="flex items-center justify-center w-full py-8">
-          <span class="material-symbols-outlined text-gray-300 animate-spin text-4xl">progress_activity</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 0;" id="top-words">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 32px;">
+          <span class="material-symbols-outlined loading-spinner">progress_activity</span>
         </div>
       </div>
     </div>
@@ -108,70 +459,482 @@
   </main>
 
   <!-- Bottom Navigation -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex items-center justify-around z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-    <a class="flex flex-col items-center gap-1 text-slate-400 w-1/3" href="/">
-      <span class="material-symbols-outlined" style="font-size: 32px;">format_list_bulleted</span>
-      <span class="font-medium text-[11px]">Gravações</span>
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/">
+      <span class="material-symbols-outlined nav-icon">format_list_bulleted</span>
+      <span class="nav-label">Gravações</span>
     </a>
-    <div class="relative -top-6 w-1/3 flex justify-center">
-      <button class="bg-primary text-white w-16 h-16 rounded-full shadow-xl shadow-primary/40 flex items-center justify-center border-4 border-white transform hover:scale-105 active:scale-100 transition-transform">
-        <span class="material-symbols-outlined text-3xl">mic</span>
+    <div style="position: relative; top: -24px; width: 33.333%; display: flex; justify-content: center;">
+      <button class="fab">
+        <span class="material-symbols-outlined" style="font-size: 32px;">mic</span>
       </button>
     </div>
-    <a class="flex flex-col items-center gap-1 text-primary w-1/3" href="/dashboard">
-      <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">dashboard</span>
-      <span class="font-medium text-[11px]">Dashboard</span>
+    <a class="nav-item active" href="/dashboard">
+      <span class="material-symbols-outlined nav-icon" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+      <span class="nav-label">Dashboard</span>
     </a>
   </nav>
 
+  <!-- Date Picker Modal -->
+  <div class="date-picker-overlay" id="datePickerOverlay">
+    <div class="date-picker-modal">
+      <div class="date-picker-handle"></div>
+      <div class="date-picker-header">
+        <h2 class="date-picker-title">Selecionar Período</h2>
+        <p class="date-picker-subtitle">Selecione as datas de início e fim</p>
+      </div>
+      <div class="date-picker-content">
+        <div class="date-picker-nav">
+          <button onclick="changeMonth(-1)">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <span class="date-picker-month" id="currentMonth">Março 2024</span>
+          <button onclick="changeMonth(1)">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <div class="date-picker-weekdays">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+        </div>
+        <div class="date-picker-days" id="calendarDays"></div>
+      </div>
+      <div class="date-picker-summary">
+        <div class="date-picker-summary-item">
+          <p class="date-picker-summary-label">Início</p>
+          <p class="date-picker-summary-value" id="summaryStart">Selecione</p>
+        </div>
+        <span class="material-symbols-outlined date-picker-arrow">arrow_forward</span>
+        <div class="date-picker-summary-item">
+          <p class="date-picker-summary-label">Fim</p>
+          <p class="date-picker-summary-value" id="summaryEnd">Selecione</p>
+        </div>
+      </div>
+      <div class="date-picker-actions">
+        <button class="date-picker-btn date-picker-btn-cancel" onclick="closeDatePicker()">Cancelar</button>
+        <button class="date-picker-btn date-picker-btn-apply" onclick="applyCustomFilter()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API = '';
+
+    // Update theme icon on load
+    function updateThemeIcon() {
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = isDarkMode() ? 'light_mode' : 'dark_mode';
+    }
+    updateThemeIcon();
+
+    const origToggle = window.toggleDarkMode;
+    window.toggleDarkMode = function() {
+      origToggle();
+      updateThemeIcon();
+    };
+    window.addEventListener('audioflow:theme-changed', updateThemeIcon);
 
     function formatNumber(n) {
       return n.toLocaleString('pt-BR');
     }
 
+    function getWords(text) {
+      return String(text ?? '').split(/\s+/).filter(w => w.length > 0);
+    }
+
+    async function handleProtectedExport(event) {
+      event.preventDefault();
+      const format = event.currentTarget.dataset.exportFormat;
+
+      try {
+        await AuthAPI.downloadFile(`/api/export/${format}`, `audioflow-transcriptions.${format}`);
+      } catch (_) {
+        alert(`Não foi possível exportar ${format.toUpperCase()}`);
+      }
+    }
+
+    function setPreferencesStatus(message, isError = false) {
+      const status = document.getElementById('preferences-status');
+      status.textContent = message;
+      status.style.color = isError ? 'var(--color-destructive)' : 'var(--color-text-tertiary)';
+    }
+
+    function updateFontScaleLabel(value) {
+      document.getElementById('pref-font-size-value').textContent = `${Math.round(Number(value) * 100)}%`;
+    }
+
+    function fillPreferenceControls(preferences) {
+      document.getElementById('pref-theme-mode').value = preferences.theme_mode;
+      document.getElementById('pref-accent-color').value = preferences.accent_color;
+      document.getElementById('pref-font-size').value = preferences.font_size_multiplier;
+      document.getElementById('pref-auto-paste').checked = Boolean(preferences.auto_paste_enabled);
+      document.getElementById('pref-sound-feedback').checked = Boolean(preferences.sound_feedback_enabled);
+      updateFontScaleLabel(preferences.font_size_multiplier);
+    }
+
+    async function hydratePreferenceControls(forceRefresh = false) {
+      try {
+        const preferences = await window.AudioFlowTheme.ensurePreferencesLoaded(forceRefresh);
+        fillPreferenceControls(preferences || window.AudioFlowTheme.getPreferences());
+        setPreferencesStatus('Preferências sincronizadas');
+      } catch (err) {
+        fillPreferenceControls(window.AudioFlowTheme.getPreferences());
+        setPreferencesStatus(err.message || 'Erro ao carregar preferências', true);
+      }
+    }
+
+    async function persistPreferences(patch) {
+      try {
+        setPreferencesStatus('Salvando...');
+        const preferences = await window.AudioFlowTheme.updatePreferences(patch);
+        fillPreferenceControls(preferences);
+        setPreferencesStatus('Preferências salvas');
+      } catch (err) {
+        setPreferencesStatus(err.message || 'Erro ao salvar preferências', true);
+      }
+    }
+
     function renderChart(weeklyChart) {
       const container = document.getElementById('chart-bars');
       if (!weeklyChart || !weeklyChart.length) {
-        container.innerHTML = '<p class="col-span-7 text-center text-gray-400 text-sm">Sem dados</p>';
+        container.innerHTML = '<p style="grid-column: span 7; text-align: center; color: var(--color-text-tertiary); font-size: 14px;">Sem dados</p>';
         return;
       }
 
       const max = Math.max(...weeklyChart.map(d => d.words), 1);
       let html = '';
 
-      for (const d of weeklyChart) {
+      for (let i = 0; i < weeklyChart.length; i++) {
+        const d = weeklyChart[i];
         const pct = Math.max((d.words / max) * 100, 2);
         const isToday = d.isToday;
-        const barColor = isToday ? 'bg-primary' : 'bg-primary/20';
-        const labelColor = isToday ? 'text-primary' : 'text-slate-400';
+        const isSelected = chartSelectedDays.includes(d.date);
+        const isInRange = chartSelectedDays.length === 2 && isDateInRange(d.date, chartSelectedDays[0], chartSelectedDays[1]);
+
+        let barColor = isToday ? 'var(--color-primary)' : 'var(--chart-bar-default)';
+        let labelColor = isToday ? 'var(--color-primary)' : 'var(--color-text-tertiary)';
+
+        if (isSelected || isInRange) {
+          barColor = 'var(--color-primary)';
+          labelColor = 'var(--color-primary)';
+        }
+
+        const containerClass = `chart-bar-container${isSelected ? ' selected' : ''}${isInRange ? ' in-range' : ''}`;
 
         html += `
-          <div class="flex flex-col items-center gap-2 h-full justify-end">
-            <div class="${barColor} rounded-t-lg w-full transition-all duration-500" style="height: ${pct}%;" title="${d.words} palavras"></div>
-            <p class="${labelColor} text-[10px] font-bold uppercase">${d.day}</p>
+          <div class="${containerClass}" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: end;"
+               data-date="${d.date}" data-index="${i}" onclick="handleChartBarClick(event, '${d.date}')" title="Clique para filtrar este dia. Ctrl+Click para selecionar intervalo.">
+            <div class="chart-bar-tooltip">${d.words} palavras</div>
+            <div class="chart-bar-bar" style="background-color: ${barColor}; border-radius: 4px 4px 0 0; width: 100%; height: ${pct}%; transition: height 0.5s;"></div>
+            <p style="color: ${labelColor}; font-size: 10px; font-weight: 700; text-transform: uppercase;">${d.day}</p>
           </div>
         `;
       }
 
       container.innerHTML = html;
+      container.style.position = 'relative';
+    }
+
+    let chartSelectedDays = [];
+
+    function isDateInRange(dateStr, startStr, endStr) {
+      const date = new Date(dateStr);
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      return date > start && date < end;
+    }
+
+    function handleChartBarClick(event, dateStr) {
+      const isCtrlPressed = event.ctrlKey || event.metaKey; // Ctrl or Cmd on Mac
+
+      if (isCtrlPressed && chartSelectedDays.length === 1) {
+        // Ctrl+Click: Select range from first selected to this one
+        const firstDate = chartSelectedDays[0];
+        const secondDate = dateStr;
+
+        // Sort dates
+        if (new Date(firstDate) > new Date(secondDate)) {
+          chartSelectedDays = [secondDate, firstDate];
+        } else {
+          chartSelectedDays = [firstDate, secondDate];
+        }
+
+        // Apply filter for the range
+        applyChartDateRange(chartSelectedDays[0], chartSelectedDays[1]);
+      } else {
+        // Normal click: Toggle selection
+        if (chartSelectedDays.includes(dateStr)) {
+          // Deselect
+          chartSelectedDays = chartSelectedDays.filter(d => d !== dateStr);
+          if (chartSelectedDays.length === 0) {
+            // If nothing selected, show all data
+            if (rawData) updateDashboard(rawData);
+          }
+        } else {
+          // Select
+          if (chartSelectedDays.length >= 2) {
+            chartSelectedDays = [dateStr];
+          } else {
+            chartSelectedDays.push(dateStr);
+          }
+
+          // If two dates selected, filter
+          if (chartSelectedDays.length === 2) {
+            const sorted = chartSelectedDays.sort((a, b) => new Date(a) - new Date(b));
+            applyChartDateRange(sorted[0], sorted[1]);
+          } else if (chartSelectedDays.length === 1) {
+            // Single day selected - filter for that day
+            applyChartDateRange(chartSelectedDays[0], chartSelectedDays[0]);
+          }
+        }
+      }
+
+      // Update custom filter button text
+      updateCustomFilterFromChart();
+
+      // Re-render chart to show selection
+      const weeklyChart = getWeeklyChartData();
+      renderChart(weeklyChart);
+    }
+
+    function applyChartDateRange(startStr, endStr) {
+      if (!rawData) return;
+
+      const startDate = new Date(startStr);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(endStr);
+      endDate.setHours(23, 59, 59, 999);
+
+      const filtered = rawData.filter(t => {
+        const date = new Date(t.timestamp);
+        return date >= startDate && date <= endDate;
+      });
+
+      // Clear active filter buttons
+      document.querySelectorAll('#filters button').forEach(b => {
+        b.classList.remove('active');
+      });
+
+      // Calculate and update stats for filtered data
+      updateDashboardStats(filtered);
+    }
+
+    function resetCustomFilterButtonLabel() {
+      document.getElementById('custom-filter-btn').innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> Personalizado
+      `;
+    }
+
+    function filterDataByPreset(filter) {
+      if (!rawData) return [];
+
+      let startDate = new Date();
+      let endDate = null;
+
+      switch (filter) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'yesterday':
+          startDate.setDate(startDate.getDate() - 1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(startDate);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case '3days':
+          startDate.setDate(startDate.getDate() - 3);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case '7days':
+          startDate.setDate(startDate.getDate() - 7);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'week':
+          startDate.setDate(startDate.getDate() - startDate.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'month':
+          startDate.setDate(1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'all':
+          startDate = new Date(0);
+          break;
+        default:
+          return rawData;
+      }
+
+      return rawData.filter((t) => {
+        const date = new Date(t.timestamp);
+        return date >= startDate && (!endDate || date <= endDate);
+      });
+    }
+
+    function filterDataByRange(startDateInput, endDateInput) {
+      if (!rawData) return [];
+
+      const startDate = new Date(startDateInput);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(endDateInput);
+      endDate.setHours(23, 59, 59, 999);
+
+      return rawData.filter((t) => {
+        const date = new Date(t.timestamp);
+        return date >= startDate && date <= endDate;
+      });
+    }
+
+    function applyCurrentDashboardView() {
+      if (!rawData) return;
+
+      if (chartSelectedDays.length > 0) {
+        const startDate = chartSelectedDays[0];
+        const endDate = chartSelectedDays[1] || chartSelectedDays[0];
+        updateDashboardStats(filterDataByRange(startDate, endDate));
+        renderChart(getWeeklyChartData());
+        return;
+      }
+
+      const customFilterButton = document.getElementById('custom-filter-btn');
+      if (customFilterButton.classList.contains('active') && selectedStartDate && selectedEndDate) {
+        updateDashboard(filterDataByRange(selectedStartDate, selectedEndDate));
+        return;
+      }
+
+      const activePresetButton = document.querySelector('#filters button.active[data-filter]:not(#custom-filter-btn)');
+      if (activePresetButton) {
+        updateDashboard(filterDataByPreset(activePresetButton.dataset.filter));
+        return;
+      }
+
+      updateDashboard(rawData);
+    }
+
+    function updateDashboardStats(data) {
+      let totalWords = 0;
+      const wordFreq = {};
+      const dailyWords = {};
+      const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+      for (const t of data) {
+        const words = getWords(t.text);
+        totalWords += words.length;
+
+        for (const raw of words) {
+          const w = raw.toLowerCase().replace(/[^a-záàãâéêíóôõúüç]/g, '');
+          if (w.length >= 4) {
+            wordFreq[w] = (wordFreq[w] || 0) + 1;
+          }
+        }
+
+        const date = new Date(t.timestamp);
+        const dayKey = date.toISOString().split('T')[0];
+        dailyWords[dayKey] = (dailyWords[dayKey] || 0) + words.length;
+      }
+
+      const now = new Date();
+      const weeklyChart = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        weeklyChart.push({
+          day: dayNames[d.getDay()],
+          date: key,
+          words: dailyWords[key] || 0,
+          isToday: i === 0,
+        });
+      }
+
+      const topWords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(([word, count]) => ({ word, count }));
+
+      const last7 = weeklyChart.reduce((sum, d) => sum + d.words, 0);
+      const avgDaily = Math.round(last7 / 7);
+      const totalDays = Object.keys(dailyWords).length || 1;
+      const overallAvg = Math.round(totalWords / totalDays);
+      const trendPct = overallAvg > 0 ? Math.round(((avgDaily - overallAvg) / overallAvg) * 100) : 0;
+
+      document.getElementById('stat-weekly-total').textContent = formatNumber(last7);
+      renderTrend('stat-weekly-trend', trendPct);
+      document.getElementById('stat-total-words').textContent = formatNumber(totalWords);
+      document.getElementById('stat-total-count').textContent = `${data.length} transcrições`;
+      document.getElementById('stat-avg-daily').textContent = formatNumber(avgDaily);
+      renderTrend('stat-avg-trend', trendPct);
+      renderTopWords(topWords);
+    }
+
+    function getWeeklyChartData() {
+      if (!rawData) return [];
+
+      const dailyWords = {};
+      const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+      for (const t of rawData) {
+        const words = getWords(t.text);
+        const date = new Date(t.timestamp);
+        const dayKey = date.toISOString().split('T')[0];
+        dailyWords[dayKey] = (dailyWords[dayKey] || 0) + words.length;
+      }
+
+      const now = new Date();
+      const weeklyChart = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        weeklyChart.push({
+          day: dayNames[d.getDay()],
+          date: key,
+          words: dailyWords[key] || 0,
+          isToday: i === 0,
+        });
+      }
+
+      return weeklyChart;
+    }
+
+    function updateCustomFilterFromChart() {
+      const customBtn = document.getElementById('custom-filter-btn');
+      if (chartSelectedDays.length === 0) {
+        customBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> Personalizado`;
+      } else if (chartSelectedDays.length === 1) {
+        const date = new Date(chartSelectedDays[0]);
+        customBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> ${date.getDate()} ${monthNames[date.getMonth()].substring(0, 3)}`;
+      } else if (chartSelectedDays.length === 2) {
+        const start = new Date(chartSelectedDays[0]);
+        const end = new Date(chartSelectedDays[1]);
+        customBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> ${start.getDate()}-${end.getDate()} ${monthNames[start.getMonth()].substring(0, 3)}`;
+      }
     }
 
     function renderTopWords(topWords) {
       const container = document.getElementById('top-words');
       if (!topWords || !topWords.length) {
-        container.innerHTML = '<p class="text-gray-400 text-sm w-full text-center py-4">Sem dados suficientes</p>';
+        container.innerHTML = '<p style="color: var(--color-text-tertiary); font-size: 14px; width: 100%; text-align: center; padding: 16px;">Sem dados suficientes</p>';
         return;
       }
 
       let html = '';
       for (const { word, count } of topWords) {
         html += `
-          <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
-            <span class="text-slate-900 font-semibold text-sm">${word.charAt(0).toUpperCase() + word.slice(1)}</span>
-            <span class="text-primary text-xs font-bold bg-white px-2 py-0.5 rounded-full">${formatNumber(count)}x</span>
-          </div>
+          <span class="top-word-chip">
+            <span class="top-word-text">${word.charAt(0).toUpperCase() + word.slice(1)}</span>
+            <span class="top-word-count">${formatNumber(count)}x</span>
+          </span>
         `;
       }
 
@@ -181,72 +944,346 @@
     function renderTrend(elementId, pct) {
       const el = document.getElementById(elementId);
       if (pct > 0) {
-        el.className = 'text-emerald-500 text-sm font-bold flex items-center';
-        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_up</span> +${pct}%`;
+        el.style.color = 'var(--color-success)';
+        el.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span> +${pct}%`;
       } else if (pct < 0) {
-        el.className = 'text-primary text-sm font-bold flex items-center';
-        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_down</span> ${pct}%`;
+        el.style.color = 'var(--color-destructive)';
+        el.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">trending_down</span> ${pct}%`;
       } else {
-        el.className = 'text-slate-400 text-sm font-bold flex items-center';
-        el.innerHTML = `<span class="material-symbols-outlined text-sm">trending_flat</span> 0%`;
+        el.style.color = 'var(--color-text-tertiary)';
+        el.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">trending_flat</span> 0%`;
       }
     }
 
     async function loadStats() {
       try {
-        const res = await fetch(`${API}/api/transcriptions/stats`);
-        const data = await res.json();
-
-        // Weekly total
-        const weeklyTotal = data.weeklyChart.reduce((sum, d) => sum + d.words, 0);
-        document.getElementById('stat-weekly-total').textContent = formatNumber(weeklyTotal);
-        renderTrend('stat-weekly-trend', data.trendPct);
-
-        // Cards
-        document.getElementById('stat-total-words').textContent = formatNumber(data.totalWords);
-        document.getElementById('stat-total-count').textContent = `${data.totalTranscriptions} transcrições`;
-        document.getElementById('stat-avg-daily').textContent = formatNumber(data.avgDaily);
-        renderTrend('stat-avg-trend', data.trendPct);
-
-        // Chart
-        renderChart(data.weeklyChart);
-
-        // Top words
-        renderTopWords(data.topWords);
+        const data = await AuthAPI.fetchJSON('/api/transcriptions/stats', {}, 'Unable to load stats');
+        rawData = data.transcriptions || [];
+        applyCurrentDashboardView();
       } catch (err) {
         document.getElementById('top-words').innerHTML = `
-          <div class="text-center w-full py-8">
-            <span class="material-symbols-outlined text-red-300 text-4xl mb-2">error</span>
-            <p class="text-gray-400">Não foi possível conectar ao servidor</p>
-            <p class="text-gray-300 text-sm mt-1">Execute: <code class="bg-gray-100 px-2 py-0.5 rounded">npm start</code> na pasta frontend/</p>
+          <div style="text-align: center; width: 100%; padding: 32px;">
+            <span class="material-symbols-outlined" style="font-size: 40px; color: var(--color-destructive);">error</span>
+            <p style="color: var(--color-text-tertiary);">Não foi possível conectar ao servidor</p>
           </div>
         `;
       }
     }
 
-    // Filter buttons (visual toggle, data is same for now)
+    let rawData = null;
+
+    // Filter buttons with real filtering
     document.getElementById('filters').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-filter]');
-      if (!btn) return;
+      if (!btn || btn.dataset.filter === 'custom') return;
+
       document.querySelectorAll('#filters button').forEach(b => {
-        b.className = 'flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 px-4 text-slate-700 text-sm font-medium';
+        b.classList.remove('active');
       });
-      btn.className = 'flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-xl px-4 bg-primary text-white text-sm font-medium';
+      btn.classList.add('active');
+
+      chartSelectedDays = [];
+      resetCustomFilterButtonLabel();
+
+      if (!rawData) return;
+      updateDashboard(filterDataByPreset(btn.dataset.filter));
     });
 
+    // Custom filter button
+    document.getElementById('custom-filter-btn').addEventListener('click', () => {
+      openDatePicker();
+    });
+
+    function updateDashboard(data) {
+      let totalWords = 0;
+      const wordFreq = {};
+      const dailyWords = {};
+      const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+      for (const t of data) {
+        const words = getWords(t.text);
+        totalWords += words.length;
+
+        for (const raw of words) {
+          const w = raw.toLowerCase().replace(/[^a-záàãâéêíóôõúüç]/g, '');
+          if (w.length >= 4) {
+            wordFreq[w] = (wordFreq[w] || 0) + 1;
+          }
+        }
+
+        const date = new Date(t.timestamp);
+        const dayKey = date.toISOString().split('T')[0];
+        dailyWords[dayKey] = (dailyWords[dayKey] || 0) + words.length;
+      }
+
+      const now = new Date();
+      const weeklyChart = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        weeklyChart.push({
+          day: dayNames[d.getDay()],
+          date: key,
+          words: dailyWords[key] || 0,
+          isToday: i === 0,
+        });
+      }
+
+      const topWords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(([word, count]) => ({ word, count }));
+
+      const last7 = weeklyChart.reduce((sum, d) => sum + d.words, 0);
+      const avgDaily = Math.round(last7 / 7);
+      const totalDays = Object.keys(dailyWords).length || 1;
+      const overallAvg = Math.round(totalWords / totalDays);
+      const trendPct = overallAvg > 0 ? Math.round(((avgDaily - overallAvg) / overallAvg) * 100) : 0;
+
+      document.getElementById('stat-weekly-total').textContent = formatNumber(last7);
+      renderTrend('stat-weekly-trend', trendPct);
+      document.getElementById('stat-total-words').textContent = formatNumber(totalWords);
+      document.getElementById('stat-total-count').textContent = `${data.length} transcrições`;
+      document.getElementById('stat-avg-daily').textContent = formatNumber(avgDaily);
+      renderTrend('stat-avg-trend', trendPct);
+      renderChart(weeklyChart);
+      renderTopWords(topWords);
+    }
+
     // WebSocket for real-time
-    function connectWS() {
+    async function connectWS() {
       try {
-        const ws = new WebSocket('ws://localhost:3001');
-        ws.onmessage = () => loadStats();
+        const wsUrl = await AuthAPI.getWebSocketUrl();
+        const ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_transcriptions' || data.type === 'refresh' || data.type === 'transcription_deleted') {
+            loadStats();
+          } else if (data.type === 'preferences_updated') {
+            hydratePreferenceControls(true);
+          }
+        };
         ws.onclose = () => setTimeout(connectWS, 3000);
       } catch (_) {
         setTimeout(connectWS, 3000);
       }
     }
 
-    loadStats();
-    connectWS();
+    // --- Authentication ---
+    async function initAuth() {
+      const session = await AuthAPI.requireAuth();
+      if (!session) {
+        return false;
+      }
+
+      document.getElementById('username-display').textContent = session.username;
+      document.getElementById('user-initial').textContent = session.username.charAt(0).toUpperCase();
+      return true;
+    }
+
+    async function handleLogout() {
+      await AuthAPI.logout();
+      window.location.href = '/login.html';
+    }
+
+    // ============================================
+    // DATE PICKER FUNCTIONALITY
+    // ============================================
+
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let selectedStartDate = null;
+    let selectedEndDate = null;
+    let selectingStart = true; // true = selecting start, false = selecting end
+
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    function openDatePicker() {
+      document.getElementById('datePickerOverlay').classList.add('open');
+      renderCalendar();
+    }
+
+    function closeDatePicker() {
+      document.getElementById('datePickerOverlay').classList.remove('open');
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      } else if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const container = document.getElementById('calendarDays');
+      const monthLabel = document.getElementById('currentMonth');
+      monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const startingDay = firstDay.getDay();
+      const totalDays = lastDay.getDate();
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let html = '';
+
+      // Previous month days
+      const prevMonth = new Date(currentYear, currentMonth, 0);
+      for (let i = startingDay - 1; i >= 0; i--) {
+        const day = prevMonth.getDate() - i;
+        html += `<button class="date-picker-day other-month" disabled>${day}</button>`;
+      }
+
+      // Current month days
+      for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(currentYear, currentMonth, day);
+        date.setHours(0, 0, 0, 0);
+
+        const isToday = date.getTime() === today.getTime();
+        const isPast = date < today;
+        const isSelectedStart = selectedStartDate && date.getTime() === selectedStartDate.getTime();
+        const isSelectedEnd = selectedEndDate && date.getTime() === selectedEndDate.getTime();
+        const isInRange = selectedStartDate && selectedEndDate && date > selectedStartDate && date < selectedEndDate;
+
+        let classes = 'date-picker-day';
+        if (isToday) classes += ' today';
+        if (!isPast && !isToday) classes += ' disabled';
+        if (isSelectedStart || isSelectedEnd) classes += ' selected';
+        if (isInRange) classes += ' in-range';
+
+        html += `<button class="${classes}" onclick="selectDate(${currentYear}, ${currentMonth}, ${day})">${day}</button>`;
+      }
+
+      container.innerHTML = html;
+      updateSummary();
+    }
+
+    function selectDate(year, month, day) {
+      const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
+
+      if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+        // Start new selection
+        selectedStartDate = date;
+        selectedEndDate = null;
+        selectingStart = false;
+      } else if (date >= selectedStartDate) {
+        // Select end date
+        selectedEndDate = date;
+        selectingStart = true;
+      } else {
+        // Date before start, make it the new start
+        selectedStartDate = date;
+        selectedEndDate = null;
+        selectingStart = false;
+      }
+
+      renderCalendar();
+    }
+
+    function updateSummary() {
+      const startEl = document.getElementById('summaryStart');
+      const endEl = document.getElementById('summaryEnd');
+
+      if (selectedStartDate) {
+        startEl.textContent = formatDateShort(selectedStartDate);
+      } else {
+        startEl.textContent = 'Selecione';
+      }
+
+      if (selectedEndDate) {
+        endEl.textContent = formatDateShort(selectedEndDate);
+      } else {
+        endEl.textContent = 'Selecione';
+      }
+    }
+
+    function formatDateShort(date) {
+      const day = date.getDate();
+      const month = monthNames[date.getMonth()].substring(0, 3);
+      const year = date.getFullYear();
+      return `${String(day).padStart(2, '0')} ${month} ${year}`;
+    }
+
+    function applyCustomFilter() {
+      if (!selectedStartDate || !selectedEndDate) {
+        alert('Selecione as datas de início e fim');
+        return;
+      }
+
+      if (!rawData) return;
+
+      chartSelectedDays = [];
+      const filtered = filterDataByRange(selectedStartDate, selectedEndDate);
+
+      // Update UI
+      document.querySelectorAll('#filters button').forEach(b => {
+        b.classList.remove('active');
+      });
+      document.getElementById('custom-filter-btn').classList.add('active');
+
+      // Update custom button text to show selected range
+      const customBtn = document.getElementById('custom-filter-btn');
+      customBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span> ${formatDateShort(selectedStartDate)} - ${formatDateShort(selectedEndDate)}`;
+
+      updateDashboard(filtered);
+      closeDatePicker();
+    }
+
+    // Close on overlay click
+    document.getElementById('datePickerOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'datePickerOverlay') {
+        closeDatePicker();
+      }
+    });
+
+    document.querySelectorAll('[data-export-format]').forEach((link) => {
+      link.addEventListener('click', handleProtectedExport);
+    });
+
+    document.getElementById('pref-theme-mode').addEventListener('change', (event) => {
+      persistPreferences({ theme_mode: event.target.value });
+    });
+
+    document.getElementById('pref-accent-color').addEventListener('change', (event) => {
+      persistPreferences({ accent_color: event.target.value });
+    });
+
+    document.getElementById('pref-font-size').addEventListener('input', (event) => {
+      updateFontScaleLabel(event.target.value);
+    });
+
+    document.getElementById('pref-font-size').addEventListener('change', (event) => {
+      persistPreferences({ font_size_multiplier: Number(event.target.value) });
+    });
+
+    document.getElementById('pref-auto-paste').addEventListener('change', (event) => {
+      persistPreferences({ auto_paste_enabled: event.target.checked });
+    });
+
+    document.getElementById('pref-sound-feedback').addEventListener('change', (event) => {
+      persistPreferences({ sound_feedback_enabled: event.target.checked });
+    });
+
+    // Initialize
+    async function bootstrap() {
+      const authenticated = await initAuth();
+      if (!authenticated) return;
+      await hydratePreferenceControls(true);
+      updateThemeIcon();
+      loadStats();
+      connectWS();
+    }
+
+    bootstrap();
   </script>
 
 </body>

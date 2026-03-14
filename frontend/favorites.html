@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>ÁudioFlow - Suas Transcrições</title>
+  <title>ÁudioFlow - Favoritos</title>
   <link rel="stylesheet" href="/dist/styles.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -54,14 +54,20 @@
 <body>
 
   <!-- Header -->
-  <header class="header-audioflow">
+  <header class="header-audioflow" style="flex-wrap: wrap; gap: 12px;">
     <div style="display: flex; align-items: center; gap: 8px;">
-      <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
-        <span class="material-symbols-outlined" style="font-size: 32px; font-weight: bold;">graphic_eq</span>
-      </div>
-      <h1 style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">ÁudioFlow</h1>
+      <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+          <span class="material-symbols-outlined" style="font-size: 32px; font-weight: bold;">graphic_eq</span>
+        </div>
+        <h1 style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">ÁudioFlow</h1>
+      </a>
     </div>
-    <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span style="font-size: 14px; font-weight: 600; color: var(--color-warning); display: flex; align-items: center; gap: 4px;">
+        <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1;">star</span>
+        Favoritos
+      </span>
       <div style="text-align: right; display: none;" class="sm:block">
         <p class="text-label" id="username-display">Usuário</p>
         <button onclick="handleLogout()" style="font-size: 12px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;">Sair</button>
@@ -75,38 +81,11 @@
     </div>
   </header>
 
-  <!-- Search Bar -->
-  <div style="padding: 0 16px 16px;">
-    <div class="search-bar">
-      <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-text-tertiary);">search</span>
-      <input id="search-input" type="text" placeholder="Buscar transcrições..." />
-      <button id="search-clear" style="padding: 4px; background: none; border: none; cursor: pointer; color: var(--color-text-tertiary); display: none;">
-        <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
-      </button>
-    </div>
-  </div>
-
   <!-- Main Content -->
-  <main style="flex: 1; overflow-y: auto; padding-bottom: 96px;">
-    <section style="padding: 0 16px 16px; display: flex; align-items: center; justify-content: space-between;">
-      <h2 style="font-size: 24px; font-weight: 700; color: var(--color-text-primary);">Bem-vindo, Lucas</h2>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="display: flex; gap: 8px;">
-          <a href="/api/export/csv" download class="btn-export btn-export-csv" data-export-format="csv">
-            <span class="material-symbols-outlined" style="font-size: 14px;">file_download</span> CSV
-          </a>
-          <a href="/api/export/json" download class="btn-export btn-export-json" data-export-format="json">
-            <span class="material-symbols-outlined" style="font-size: 14px;">file_download</span> JSON
-          </a>
-        </div>
-        <a href="/favorites" style="color: var(--color-primary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-          <span class="material-symbols-outlined" style="font-size: 18px;">star</span> Favoritos
-        </a>
-      </div>
-    </section>
+  <main style="flex: 1; padding: 16px; padding-bottom: 96px;">
 
-    <!-- Dynamic transcription list -->
-    <div id="transcription-list" style="padding: 0 16px;">
+    <!-- Favorites List -->
+    <div id="favorites-list">
       <div style="display: flex; align-items: center; justify-content: center; padding: 48px;">
         <span class="material-symbols-outlined loading-spinner">progress_activity</span>
       </div>
@@ -114,9 +93,10 @@
 
     <!-- Empty state -->
     <div id="empty-state" class="empty-state hidden">
-      <span class="material-symbols-outlined empty-state-icon">mic_off</span>
-      <p class="empty-state-title">Nenhuma transcrição ainda</p>
-      <p class="empty-state-description">Use Fn+Space no app para gravar</p>
+      <span class="material-symbols-outlined empty-state-icon">star</span>
+      <p class="empty-state-title">Nenhum favorito salvo</p>
+      <p class="empty-state-description">Clique na estrela em qualquer transcrição</p>
+      <a href="/" style="color: var(--color-primary); font-size: 14px; font-weight: 600; display: inline-block; margin-top: 16px;">Voltar para Gravações</a>
     </div>
   </main>
 
@@ -125,7 +105,7 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <a class="nav-item active" href="/">
+    <a class="nav-item" href="/">
       <span class="material-symbols-outlined nav-icon" style="font-variation-settings: 'FILL' 1;">view_list</span>
       <span class="nav-label">Gravações</span>
     </a>
@@ -157,22 +137,6 @@
     };
     window.addEventListener('audioflow:theme-changed', updateThemeIcon);
 
-    // --- Helpers ---
-    function formatDate(iso) {
-      const d = new Date(iso);
-      const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      return `${d.getDate()} de ${months[d.getMonth()]}, ${d.getFullYear()}`;
-    }
-
-    function formatTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function countWords(text) {
-      return String(text ?? '').split(/\s+/).filter(w => w.length > 0).length;
-    }
-
     function escapeHtml(value) {
       return String(value)
         .replace(/&/g, '&amp;')
@@ -186,6 +150,17 @@
       const palette = ['#007AFF', '#10B981', '#F97316', '#EC4899', '#8B5CF6', '#14B8A6'];
       const hash = Array.from(seed).reduce((acc, char) => acc + char.charCodeAt(0), 0);
       return palette[hash % palette.length];
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      return `${d.getDate()} de ${months[d.getMonth()]}, ${d.getFullYear()}`;
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
 
     function showToast(msg) {
@@ -207,27 +182,11 @@
       }
     }
 
-    async function handleProtectedExport(event) {
-      event.preventDefault();
-      const format = event.currentTarget.dataset.exportFormat;
+    async function toggleFavorite(id) {
       try {
-        await AuthAPI.downloadFile(`${API}/api/export/${format}`, `audioflow-transcriptions.${format}`);
-        showToast(`Download ${format.toUpperCase()} iniciado`);
-      } catch {
-        showToast(`Erro ao exportar ${format.toUpperCase()}`);
-      }
-    }
-
-    async function toggleFavorite(id, currentlyFavorite) {
-      try {
-        if (currentlyFavorite) {
-          await AuthAPI.removeFavorite(id);
-        } else {
-          await AuthAPI.addFavorite(id);
-        }
-
-        await refreshVisibleTranscriptions();
-        showToast(currentlyFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
+        await AuthAPI.removeFavorite(id);
+        await loadFavorites();
+        showToast('Removido dos favoritos');
       } catch (err) {
         showToast(err.message || 'Erro ao atualizar favorito');
       }
@@ -283,7 +242,7 @@
         }
 
         await AuthAPI.addTagToTranscription(transcriptionId, tag.id);
-        await refreshVisibleTranscriptions();
+        await loadFavorites();
         showToast(`Tag ${tag.name} aplicada`);
       } catch (err) {
         showToast(err.message || 'Erro ao salvar tag');
@@ -293,17 +252,16 @@
     async function removeTag(transcriptionId, tagId) {
       try {
         await AuthAPI.removeTagFromTranscription(transcriptionId, tagId);
-        await refreshVisibleTranscriptions();
+        await loadFavorites();
         showToast('Tag removida');
       } catch (err) {
         showToast(err.message || 'Erro ao remover tag');
       }
     }
 
-    // --- Group transcriptions by date ---
-    function groupByDate(transcriptions) {
+    function groupByDate(items) {
       const groups = {};
-      for (const t of transcriptions) {
+      for (const t of items) {
         const key = formatDate(t.timestamp);
         if (!groups[key]) groups[key] = [];
         groups[key].push(t);
@@ -311,38 +269,32 @@
       return groups;
     }
 
-    // --- Render ---
-    function render(transcriptions) {
-      const list = document.getElementById('transcription-list');
+    function render(items) {
+      const list = document.getElementById('favorites-list');
       const empty = document.getElementById('empty-state');
 
-      if (!transcriptions.length) {
+      if (!items.length) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
         return;
       }
 
       empty.classList.add('hidden');
-      const groups = groupByDate(transcriptions);
+      const groups = groupByDate(items);
       let html = '';
 
-      for (const [date, items] of Object.entries(groups)) {
-        const totalWords = items.reduce((sum, t) => sum + countWords(t.text), 0);
-
+      for (const [date, itemList] of Object.entries(groups)) {
         html += `
           <section class="date-group">
             <div class="date-group-header">
               <h3 class="date-group-title">${date}</h3>
-              <div class="date-group-badge">${totalWords} palavras</div>
+              <div class="date-group-badge">${itemList.length} item${itemList.length > 1 ? 's' : ''}</div>
             </div>
             <div class="transcription-card">
         `;
 
-        for (const t of items) {
+        for (const t of itemList) {
           const escaped = escapeHtml(t.text ?? '');
-          const isFav = t.isFavorite === true;
-          const starColor = isFav ? 'color: var(--color-warning);' : 'color: var(--color-text-tertiary);';
-          const starFill = isFav ? "font-variation-settings: 'FILL' 1;" : '';
           html += `
             <article class="transcription-item">
               <span style="font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); width: 64px; flex-shrink: 0;">${formatTime(t.timestamp)}</span>
@@ -354,8 +306,8 @@
                 <button onclick="copyText(\`${escaped.replace(/`/g, '\\`')}\`)" style="padding: 4px; background: none; border: none; cursor: pointer; color: var(--color-text-tertiary);" title="Copiar">
                   <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
                 </button>
-                <button onclick="toggleFavorite(${t.id}, ${isFav})" style="padding: 4px; background: none; border: none; cursor: pointer; ${starColor}" title="Favoritar">
-                  <span class="material-symbols-outlined" style="font-size: 18px; ${starFill}">star</span>
+                <button onclick="toggleFavorite(${t.id})" style="padding: 4px; background: none; border: none; cursor: pointer; color: var(--color-warning);" title="Remover favorito">
+                  <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1;">star</span>
                 </button>
               </div>
             </article>
@@ -375,92 +327,19 @@
       });
     }
 
-    // --- Fetch data ---
-    let currentTranscriptionsRequest = 0;
-
-    async function loadTranscriptions(query = '') {
-      const requestId = ++currentTranscriptionsRequest;
-      const normalizedQuery = query.trim();
-      const endpoint = normalizedQuery
-        ? `${API}/api/transcriptions/search?q=${encodeURIComponent(normalizedQuery)}`
-        : `${API}/api/transcriptions`;
-
+    async function loadFavorites() {
       try {
-        const data = await AuthAPI.fetchJSON(endpoint, {}, 'Unable to load transcriptions');
-        if (requestId !== currentTranscriptionsRequest) {
-          return;
-        }
-
-        allTranscriptions = data.transcriptions || [];
-        render(allTranscriptions);
+        const favorites = await AuthAPI.getFavorites();
+        render(favorites);
       } catch (err) {
-        if (requestId !== currentTranscriptionsRequest) {
-          return;
-        }
-
-        document.getElementById('transcription-list').innerHTML = `
+        document.getElementById('favorites-list').innerHTML = `
           <div style="text-align: center; padding: 48px;">
             <span class="material-symbols-outlined" style="font-size: 40px; color: var(--color-destructive);">error</span>
-            <p style="color: var(--color-text-tertiary);">Não foi possível conectar ao servidor</p>
-            <p style="color: var(--color-text-disabled); font-size: 14px; margin-top: 4px;">Execute: <code style="background-color: var(--color-elevated); padding: 2px 8px; border-radius: 4px;">npm start</code> na pasta frontend/</p>
+            <p style="color: var(--color-text-tertiary);">Erro ao carregar favoritos</p>
           </div>
         `;
       }
     }
-
-    async function refreshVisibleTranscriptions() {
-      await loadTranscriptions(searchInput.value.trim());
-    }
-
-    // --- WebSocket real-time ---
-    async function connectWS() {
-      try {
-        const wsUrl = await AuthAPI.getWebSocketUrl();
-        const ws = new WebSocket(wsUrl);
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === 'new_transcriptions' || data.type === 'refresh' || data.type === 'transcription_deleted' || data.type === 'favorite_added' || data.type === 'favorite_removed' || data.type === 'tag_added' || data.type === 'tag_removed' || data.type === 'tag_created' || data.type === 'tag_deleted') {
-            refreshVisibleTranscriptions();
-            if (data.type === 'new_transcriptions') {
-              showToast('Nova transcrição recebida!');
-            }
-          } else if (data.type === 'preferences_updated') {
-            window.AudioFlowTheme.ensurePreferencesLoaded(true).catch(() => {});
-          }
-        };
-        ws.onclose = () => setTimeout(connectWS, 3000);
-      } catch (_) {
-        setTimeout(connectWS, 3000);
-      }
-    }
-
-    // --- Search ---
-    let allTranscriptions = [];
-    let searchDebounceTimer = null;
-    const searchInput = document.getElementById('search-input');
-    const searchClear = document.getElementById('search-clear');
-
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      searchClear.style.display = q ? 'block' : 'none';
-
-      clearTimeout(searchDebounceTimer);
-      searchDebounceTimer = setTimeout(() => {
-        loadTranscriptions(q);
-      }, q ? 200 : 0);
-    });
-
-    searchClear.addEventListener('click', () => {
-      searchInput.value = '';
-      searchClear.style.display = 'none';
-      clearTimeout(searchDebounceTimer);
-      loadTranscriptions();
-      searchInput.focus();
-    });
-
-    document.querySelectorAll('[data-export-format]').forEach((link) => {
-      link.addEventListener('click', handleProtectedExport);
-    });
 
     // --- Authentication ---
     async function initAuth() {
@@ -479,12 +358,30 @@
       window.location.href = '/login.html';
     }
 
+    async function connectWS() {
+      try {
+        const wsUrl = await AuthAPI.getWebSocketUrl();
+        const ws = new WebSocket(wsUrl);
+        ws.onmessage = async (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_transcriptions' || data.type === 'refresh' || data.type === 'transcription_deleted' || data.type === 'favorite_added' || data.type === 'favorite_removed' || data.type === 'tag_added' || data.type === 'tag_removed' || data.type === 'tag_created' || data.type === 'tag_deleted') {
+            await loadFavorites();
+          } else if (data.type === 'preferences_updated') {
+            window.AudioFlowTheme.ensurePreferencesLoaded(true).catch(() => {});
+          }
+        };
+        ws.onclose = () => setTimeout(connectWS, 3000);
+      } catch (_) {
+        setTimeout(connectWS, 3000);
+      }
+    }
+
     async function bootstrap() {
       const authenticated = await initAuth();
       if (!authenticated) return;
       await window.AudioFlowTheme.ensurePreferencesLoaded(true);
       updateThemeIcon();
-      await loadTranscriptions();
+      await loadFavorites();
       connectWS();
     }
 
