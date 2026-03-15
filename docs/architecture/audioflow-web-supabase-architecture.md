@@ -2,7 +2,7 @@
 
 **Data:** 2026-03-14
 **Autor:** @architect (Aria)
-**Status:** DRAFT - Aguardando Validação QA
+**Status:** DRAFT - Revisado apos concerns de QA, aguardando re-review
 **Epic:** EPIC-007 - AudioFlow Web Sincronizado
 
 ---
@@ -20,9 +20,15 @@
 Sistema web completo com:
 - **Autenticação Supabase** (email/senha)
 - **Perfil de usuário** com foto (Supabase Storage)
-- **Sincronização CoreData ↔ Supabase** (hibrid local/cloud)
+- **Sincronização CoreData ↔ Supabase** (híbrido local/cloud)
 - **Dashboard funcional** com filtros por data
 - **Compatibilidade total** com app macOS existente
+
+### Guardrails Arquiteturais
+- Runtime de usuário usa `SUPABASE_ANON_KEY + JWT do usuário + RLS`; `service role` fica restrito a migrações e scripts administrativos
+- Busca e filtros usam APIs seguras do client Supabase (`select`, `eq`, `ilike`, `order`, `limit`) com validação explícita de input
+- Sincronização não pode depender de `last write wins` silencioso; conflitos exigem versionamento e reconciliação explícita
+- Companion local e app macOS continuam operacionais offline; cloud é enhancement, não pré-requisito operacional
 
 ---
 
@@ -44,7 +50,7 @@ Sistema web completo com:
 │                    NODE.JS API BRIDGE                            │
 │  frontend/server.js (Express + WebSocket)                        │
 │  ├── Auth: Supabase Auth (email/senha)                          │
-│  ├── CRUD: Transcrições (CoreData local + Supabase sync)        │
+│  ├── CRUD: Transcrições (CoreData local + Supabase sync seguro) │
 │  ├── Storage: Fotos de perfil (Supabase Storage)                │
 │  └── Real-time: WebSocket para updates                          │
 └─────────────────────────────────────────────────────────────────┘
@@ -148,6 +154,9 @@ CREATE TABLE transcriptions (
   timestamp TIMESTAMPTZ NOT NULL,
   is_favorite BOOLEAN DEFAULT FALSE,
   tags TEXT[] DEFAULT '{}',
+  version INTEGER NOT NULL DEFAULT 1,
+  source_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sync_status TEXT NOT NULL DEFAULT 'synced' CHECK (sync_status IN ('synced', 'pending', 'conflict')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   synced_at TIMESTAMPTZ,
@@ -159,6 +168,7 @@ CREATE TABLE transcriptions (
 CREATE INDEX idx_transcriptions_user_id ON transcriptions(user_id);
 CREATE INDEX idx_transcriptions_timestamp ON transcriptions(timestamp DESC);
 CREATE INDEX idx_transcriptions_user_timestamp ON transcriptions(user_id, timestamp DESC);
+CREATE INDEX idx_transcriptions_sync_status ON transcriptions(user_id, sync_status);
 
 -- RLS
 ALTER TABLE transcriptions ENABLE ROW LEVEL SECURITY;
@@ -177,6 +187,28 @@ CREATE POLICY "Users can update own transcriptions"
 
 CREATE POLICY "Users can delete own transcriptions"
   ON transcriptions FOR DELETE
+  USING (auth.uid() = user_id);
+```
+
+#### Tabela: `public.sync_conflicts`
+```sql
+CREATE TABLE sync_conflicts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  transcription_id UUID NOT NULL REFERENCES transcriptions(id) ON DELETE CASCADE,
+  local_version INTEGER NOT NULL,
+  remote_version INTEGER NOT NULL,
+  local_payload JSONB NOT NULL,
+  remote_payload JSONB NOT NULL,
+  conflict_status TEXT NOT NULL DEFAULT 'open' CHECK (conflict_status IN ('open', 'resolved')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+ALTER TABLE sync_conflicts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own conflicts"
+  ON sync_conflicts FOR SELECT
   USING (auth.uid() = user_id);
 ```
 
@@ -202,7 +234,7 @@ CREATE POLICY "Users can manage own tags"
 
 ### 4.3 Sincronização CoreData ↔ Supabase
 
-**Estratégia:** Background sync com conflito resolution
+**Estratégia:** Background sync com reconciliação explícita de conflito
 
 ```
 [macOS App grava]
@@ -211,15 +243,64 @@ CREATE POLICY "Users can manage own tags"
      ↓
 [server.js detecta mudança]
      ↓
-[Push para Supabase]
+[Tentativa de sync]
      ↓
-[Update synced_at]
+[Version check + RLS]
+     ↓
+[Sync OK OU conflito registrado]
 ```
 
-**Conflito Resolution:**
-- **Create:** Sempre push para Supabase
-- **Update:** Último `updated_at` vence
-- **Delete:** Propaga para ambos lados
+**Regras de sincronização:**
+- **Create:** inserir com `version = 1`, `source_updated_at` e vínculo `local_id`
+- **Update sem conflito:** só atualiza se `version` local e remoto ainda coincidirem; update incrementa `version`
+- **Update com conflito:** se versões divergirem, criar `sync_conflicts`, manter `sync_status = 'conflict'` e não sobrescrever dados silenciosamente
+- **Delete:** deletar apenas após reconciliação, ou marcar tombstone/soft delete até confirmação do sync
+
+**Algoritmo resumido de reconciliação:**
+```javascript
+async function syncTranscription(reqSupabase, localRecord) {
+  const { data: remote } = await reqSupabase
+    .from('transcriptions')
+    .select('id, version, source_updated_at, text, tags, is_favorite')
+    .eq('user_id', localRecord.user_id)
+    .eq('local_id', localRecord.local_id)
+    .maybeSingle();
+
+  if (!remote) {
+    return reqSupabase.from('transcriptions').insert({
+      ...localRecord,
+      version: 1,
+      sync_status: 'synced'
+    });
+  }
+
+  if (remote.version !== localRecord.version) {
+    await reqSupabase.from('sync_conflicts').insert({
+      user_id: localRecord.user_id,
+      transcription_id: remote.id,
+      local_version: localRecord.version,
+      remote_version: remote.version,
+      local_payload: localRecord,
+      remote_payload: remote
+    });
+
+    return { conflict: true };
+  }
+
+  return reqSupabase
+    .from('transcriptions')
+    .update({
+      text: localRecord.text,
+      tags: localRecord.tags,
+      is_favorite: localRecord.is_favorite,
+      source_updated_at: localRecord.source_updated_at,
+      version: remote.version + 1,
+      sync_status: 'synced'
+    })
+    .eq('id', remote.id)
+    .eq('version', remote.version);
+}
+```
 
 ---
 
@@ -360,7 +441,7 @@ ORDER BY timestamp DESC;
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | GET | `/api/transcriptions` | Listar (com paginação e filtros) |
-| GET | `/api/transcriptions/search` | Buscar por texto |
+| GET | `/api/transcriptions/search` | Buscar por texto com input validado |
 | GET | `/api/transcriptions/stats` | Estatísticas do dashboard |
 | POST | `/api/transcriptions` | Criar transcrição (sync) |
 | PATCH | `/api/transcriptions/:id` | Atualizar (favorito, tags) |
@@ -375,6 +456,36 @@ ORDER BY timestamp DESC;
 | DELETE | `/api/tags/:id` | Deletar tag |
 | POST | `/api/transcriptions/:id/tags` | Adicionar tag |
 | DELETE | `/api/transcriptions/:id/tags/:tag_id` | Remover tag |
+
+### 7.1 Busca Segura
+
+```javascript
+app.get('/api/transcriptions/search', requireAuth, async (req, res) => {
+  const query = String(req.query.q || '').trim();
+
+  if (query.length < 2 || query.length > 120) {
+    return res.status(400).json({ error: 'Query must be between 2 and 120 characters' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('transcriptions')
+    .select('id, text, timestamp, is_favorite, tags')
+    .ilike('text', `%${query}%`)
+    .order('timestamp', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json(data);
+});
+```
+
+**Notas:**
+- Sem SQL raw interpolado no endpoint de busca
+- RLS continua aplicando isolamento por usuário
+- Mesmo padrão vale para filtros por data no dashboard
 
 ---
 
@@ -454,8 +565,15 @@ CREATE POLICY "Public read avatars"
 
 ### 9.3 API Security
 
-**Middleware de autenticação:**
+**Middleware de autenticação e client por requisição:**
 ```javascript
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
 async function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -470,9 +588,25 @@ async function requireAuth(req, res, next) {
   }
 
   req.user = user;
+  req.supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  );
+
   next();
 }
 ```
+
+**Regra operacional:**
+- `SUPABASE_SERVICE_ROLE_KEY` não é carregada no `server.js` para fluxo de usuário
+- Se uma rotina administrativa precisar de `service role`, ela roda fora do request path do usuário
 
 ---
 
@@ -535,11 +669,15 @@ supabase db push
 # .env (NÃO commitar)
 SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # Opcional para produção
 NODE_ENV=production
 PORT=3000
+```
+
+```env
+# .env.admin (scripts de migração/admin; NÃO usado pelo runtime de usuário)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ---
@@ -552,6 +690,10 @@ PORT=3000
 
 ```javascript
 // scripts/migrate-to-supabase.js
+const adminSupabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function migrateTranscriptions() {
   // 1. Ler todas as transcrições do CoreData
@@ -560,11 +702,13 @@ async function migrateTranscriptions() {
 
   // 2. Para cada transcrição, inserir no Supabase
   for (const row of rows) {
-    await supabase.from('transcriptions').insert({
+    await adminSupabase.from('transcriptions').insert({
       user_id: userId,
       local_id: row.Z_PK,
       text: row.ZTEXT,
       timestamp: coreDataTimestampToISO(row.ZTIMESTAMP),
+      version: 1,
+      source_updated_at: new Date().toISOString(),
       synced_at: new Date().toISOString()
     });
   }
@@ -593,30 +737,30 @@ async function migrateTranscriptions() {
 
 ## 14. Roadmap de Implementação
 
-### Fase 1: Autenticação (Story 7.1)
+### Fase 1: Autenticação (Story 9.1)
 - [ ] Configurar projeto Supabase
 - [ ] Criar tabelas profiles
 - [ ] Implementar signup.html
 - [ ] Modificar login.html
-- [ ] Middleware de auth
+- [ ] Middleware com anon key + JWT + RLS
 
-### Fase 2: Perfil de Usuário (Story 7.2)
+### Fase 2: Perfil de Usuário (Story 9.2)
 - [ ] Criar profile.html
 - [ ] Upload de avatar
 - [ ] Editar nome/preferências
 
-### Fase 3: Sincronização (Story 7.3)
+### Fase 3: Sincronização (Story 9.3)
 - [ ] Criar tabela transcriptions no Supabase
-- [ ] Implementar sync CoreData → Supabase
-- [ ] Resolver conflitos
+- [ ] Implementar sync CoreData → Supabase com versionamento
+- [ ] Registrar e resolver conflitos sem perda silenciosa
 - [ ] Fallback offline
 
-### Fase 4: Dashboard Funcional (Story 7.4)
+### Fase 4: Dashboard Funcional (Story 9.4)
 - [ ] Implementar filtros por data
 - [ ] Date picker personalizado
 - [ ] Stats dinâmicos por período
 
-### Fase 5: Tags e Favoritos (Story 7.5)
+### Fase 5: Tags e Favoritos (Story 9.5)
 - [ ] Criar tabela tags
 - [ ] CRUD de tags
 - [ ] Associar tags a transcrições
@@ -629,10 +773,11 @@ async function migrateTranscriptions() {
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
 | **CoreData quebra compatibilidade** | Baixa | Alto | Não modificar estrutura CoreData |
-| **Sync conflitos** | Média | Médio | Estratégia "last write wins" + timestamp |
+| **Sync conflitos** | Média | Alto | Versionamento, `sync_conflicts` e reconciliação explícita |
 | **Auth downtime** | Baixa | Alto | Fallback offline com dados locais |
 | **Custo Supabase** | Baixa | Médio | Plano gratuito generoso, monitorar uso |
 | **Latência sync** | Média | Baixo | Background sync assíncrono |
+| **RLS/service role mal configurados** | Média | Alto | Runtime com anon key + JWT; service role só em scripts admin |
 
 ---
 
@@ -666,17 +811,17 @@ async function migrateTranscriptions() {
 
 ## 17. Próximos Passos
 
-1. **@qa validar arquitetura**
-   - Revisar segurança
-   - Validar modelo de dados
-   - Checar performance
+1. **@qa reavaliar arquitetura**
+   - Revisar segurança de auth e RLS
+   - Validar modelo de sync e conflitos
+   - Confirmar que os must-fix foram incorporados
 
 2. **@sm criar stories**
-   - Story 7.1: Autenticação Supabase
-   - Story 7.2: Perfil de Usuário
-   - Story 7.3: Sincronização
-   - Story 7.4: Dashboard Funcional
-   - Story 7.5: Tags e Favoritos
+   - Story 9.1: Autenticação Supabase
+   - Story 9.2: Perfil de Usuário
+   - Story 9.3: Sincronização segura
+   - Story 9.4: Dashboard Funcional
+   - Story 9.5: Tags e Favoritos
 
 3. **@dev implementar**
    - Seguir ordem das stories

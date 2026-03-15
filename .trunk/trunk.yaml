@@ -1,0 +1,28 @@
+{
+  "$schema": "https://trunk.io/releases/trunk_validators/schema.json",
+  "version": "0.1",
+  "tools": {
+    "enabled": ["stylelint", "eslint"],
+    "stylelint": {
+      "command": "npx stylelint",
+      "config_path": ".stylelintrc.json"
+    }
+  },
+  "actions": {
+    "enabled": ["lint", "test", "build"],
+    "definitions": {
+      "lint": {
+        "run": "npm run lint",
+        "triggers": ["on_push", "on_pull_request"]
+      },
+      "test": {
+        "run": "npm test",
+        "triggers": ["on_push", "on_pull_request"]
+      },
+      "build": {
+        "run": "npm run build",
+        "triggers": ["on_push"]
+      }
+    }
+  }
+}

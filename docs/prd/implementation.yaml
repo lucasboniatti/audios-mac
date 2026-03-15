@@ -357,6 +357,75 @@ phases:
           - AudioFlow/Assets/logo.svg
         effort: "M"
 
+  - phase: 9
+    name: "Cloud Sync & Account-Based Web Companion"
+    priority: COULD
+    stories:
+      - story_id: "9.1"
+        title: "Integrar autenticação cloud por conta no companion web"
+        description: "Adicionar login/signup por email e sessão cloud ao companion web sem remover o fallback local existente"
+        acceptance_criteria:
+          - "Fluxo de signup e login por conta funciona com sessão autenticada por usuário"
+          - "Requisições de usuário usam JWT com RLS e não dependem de service role em runtime"
+          - "Rotas protegidas continuam negando acesso sem sessão válida"
+        files:
+          - frontend/login.html
+          - frontend/server.js
+          - docs/architecture/audioflow-web-supabase-architecture.md
+        effort: "M"
+
+      - story_id: "9.2"
+        title: "Adicionar perfil cloud com avatar e preferências remotas"
+        description: "Permitir que o usuário mantenha perfil, avatar e preferências sincronizadas em backend cloud"
+        acceptance_criteria:
+          - "Perfil por usuário pode ser consultado e atualizado"
+          - "Avatar usa storage seguro por usuário"
+          - "Preferências remotas coexistem com fallback local"
+        files:
+          - frontend/theme.js
+          - frontend/server.js
+          - docs/architecture/audioflow-web-supabase-architecture.md
+        effort: "M"
+
+      - story_id: "9.3"
+        title: "Sincronizar transcrições com reconciliação segura de conflito"
+        description: "Sincronizar base local e nuvem sem perda silenciosa de dados, com resolução explícita de conflito e fallback offline"
+        acceptance_criteria:
+          - "Transcrições locais podem ser propagadas para a nuvem sem alterar o CoreData do app"
+          - "Conflitos são detectados por versão ou mecanismo equivalente antes de sobrescrever dados"
+          - "Falhas de sincronização preservam leitura e operação local"
+        files:
+          - frontend/server.js
+          - docs/architecture/audioflow-web-supabase-architecture.md
+          - docs/qa/QA_FIX_REQUEST.md
+        effort: "L"
+
+      - story_id: "9.4"
+        title: "Implementar dashboard cloud com filtros por período"
+        description: "Tornar filtros por data e estatísticas do dashboard funcionais para o modo cloud, com degradação controlada para o modo local"
+        acceptance_criteria:
+          - "Dashboard aplica filtros por período no modo cloud"
+          - "Métricas e listagens são paginadas por usuário"
+          - "Fallback local continua disponível quando a nuvem não estiver acessível"
+        files:
+          - frontend/dashboard.html
+          - frontend/index.html
+          - frontend/server.js
+        effort: "M"
+
+      - story_id: "9.5"
+        title: "Sincronizar tags e favoritos no modo cloud"
+        description: "Levar tags, favoritos e organização pessoal para o modo cloud sem perder o modelo local já existente"
+        acceptance_criteria:
+          - "Favoritos e tags ficam disponíveis por usuário autenticado"
+          - "Modo cloud preserva isolamento por usuário"
+          - "Dados locais podem ser reconciliados sem corromper o fallback atual"
+        files:
+          - frontend/favorites.html
+          - frontend/server.js
+          - docs/architecture/audioflow-web-supabase-architecture.md
+        effort: "M"
+
 # Test Strategy
 test_strategy:
   unit_tests:
@@ -442,13 +511,15 @@ timeline:
       estimated_effort: "8-12 horas"
     - phase: 8
       estimated_effort: "8-12 horas"
-  total_estimate: "40-62 horas"
+    - phase: 9
+      estimated_effort: "16-24 horas"
+  total_estimate: "56-86 horas"
   
 # Next Steps
 next_steps:
-  - action: "Criar epic brownfield do design system compartilhado"
+  - action: "Refinar e aprovar o epic future-state de sync cloud do companion web"
     command: "/aios-pm *create-epic"
-  - action: "Criar stories 8.1-8.3 a partir da fase 8"
+  - action: "Criar stories 9.1-9.5 a partir da fase 9 após resolver must-fix de QA"
     command: "/aios-sm *draft"
-  - action: "Iniciar implementação da story 8.1"
-    command: "/aios-dev *develop 8.1"
+  - action: "Revisar arquitetura Supabase e QA fix request antes de qualquer implementação"
+    command: "/aios-architect *document-project"

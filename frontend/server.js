@@ -7,6 +7,91 @@ const fs = require('fs');
 const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const net = require('net');
+const { createClient } = require('@supabase/supabase-js');
+
+// Load .env from project root
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
+
+// --- Granular Rate Limiting ---
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+
+// Rate limits per endpoint
+const RATE_LIMITS = {
+  '/api/sync/push': { max: 10, window: 60000 },      // 10/min - heavy operation
+  '/api/sync/pull': { max: 20, window: 60000 },      // 20/min - read operation
+  '/api/cloud/transcriptions': { max: 60, window: 60000 }, // 60/min - frequent reads
+  '/api/transcriptions': { max: 60, window: 60000 }, // 60/min - frequent reads
+  '/api/cloud/tags': { max: 30, window: 60000 },     // 30/min - moderate
+  'default': { max: 30, window: 60000 }              // 30/min default
+};
+
+function rateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+
+  // Get endpoint-specific limit
+  const endpoint = Object.keys(RATE_LIMITS).find(key => req.path.startsWith(key));
+  const config = RATE_LIMITS[endpoint] || RATE_LIMITS['default'];
+  const { max: maxRequests, window } = config;
+
+  const key = `${ip}:${endpoint || 'default'}`;
+  const entry = rateLimitMap.get(key) || { count: 0, resetAt: now + window };
+
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + window;
+  }
+
+  entry.count++;
+  rateLimitMap.set(key, entry);
+
+  // Add rate limit headers
+  res.setHeader('X-RateLimit-Limit', maxRequests);
+  res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - entry.count));
+  res.setHeader('X-RateLimit-Reset', Math.ceil(entry.resetAt / 1000));
+
+  if (entry.count > maxRequests) {
+    log('WARN', 'Rate limit exceeded', { ip, path: req.path, count: entry.count });
+    return res.status(429).json({
+      error: 'Too many requests. Please wait a moment.',
+      retryAfter: Math.ceil((entry.resetAt - now) / 1000)
+    });
+  }
+
+  next();
+}
+
+// --- Input Validation ---
+const MAX_TEXT_LENGTH = 100000; // 100KB max text
+const MAX_TRANSCRIPTIONS_PER_SYNC = 100;
+
+function validateSyncInput(req, res, next) {
+  const { transcriptions } = req.body;
+
+  if (!Array.isArray(transcriptions)) {
+    return res.status(400).json({ error: 'transcriptions must be an array' });
+  }
+
+  if (transcriptions.length > MAX_TRANSCRIPTIONS_PER_SYNC) {
+    return res.status(400).json({
+      error: `Too many transcriptions. Maximum ${MAX_TRANSCRIPTIONS_PER_SYNC} per batch.`
+    });
+  }
+
+  for (const t of transcriptions) {
+    if (t.text && t.text.length > MAX_TEXT_LENGTH) {
+      return res.status(400).json({
+        error: `Text too long. Maximum ${MAX_TEXT_LENGTH} characters.`
+      });
+    }
+  }
+
+  next();
+}
 
 // CoreData stores timestamps as seconds since 2001-01-01T00:00:00Z
 const COREDATA_EPOCH = new Date('2001-01-01T00:00:00Z').getTime() / 1000;
@@ -29,6 +114,107 @@ const SHARED_ASSETS_DIR = path.resolve(__dirname, '../AudioFlow/Assets');
 
 // Production mode detection
 const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.argv.includes('--production');
+
+// --- Structured Logging ---
+const LOG_LEVELS = { ERROR: 0, WARN: 1, INFO: 2, DEBUG: 3 };
+const LOG_LEVEL = LOG_LEVELS[process.env.LOG_LEVEL?.toUpperCase()] ?? LOG_LEVELS.INFO;
+
+function log(level, message, data = {}) {
+  if (LOG_LEVELS[level] > LOG_LEVEL) return;
+  const timestamp = new Date().toISOString();
+  const logEntry = { timestamp, level, message, ...data };
+  console.log(JSON.stringify(logEntry));
+}
+
+// Request timing middleware
+function requestTimer(req, res, next) {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+
+    // Track performance metrics
+    if (typeof trackPerformance === 'function') {
+      trackPerformance(req, res, duration);
+    }
+
+    log('INFO', 'Request completed', {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      duration_ms: duration
+    });
+  });
+  next();
+}
+
+// Application start time for health check
+const APP_START_TIME = new Date();
+let requestCount = 0;
+let errorCount = 0;
+
+// --- Performance Monitoring ---
+const performanceMetrics = {
+  requests: {
+    total: 0,
+    byEndpoint: {},
+    errors: 0,
+    slowRequests: []
+  },
+  sync: {
+    pushCount: 0,
+    pullCount: 0,
+    avgPushTime: 0,
+    avgPullTime: 0,
+    totalPushTime: 0,
+    totalPullTime: 0
+  },
+  database: {
+    queryCount: 0,
+    totalTime: 0
+  }
+};
+
+// Track slow requests (over 1 second)
+const SLOW_REQUEST_THRESHOLD_MS = 1000;
+const MAX_SLOW_REQUESTS_STORED = 50;
+
+function trackPerformance(req, res, duration) {
+  const endpoint = req.path;
+
+  // Update request count by endpoint
+  if (!performanceMetrics.requests.byEndpoint[endpoint]) {
+    performanceMetrics.requests.byEndpoint[endpoint] = { count: 0, totalTime: 0, errors: 0 };
+  }
+  performanceMetrics.requests.byEndpoint[endpoint].count++;
+  performanceMetrics.requests.byEndpoint[endpoint].totalTime += duration;
+
+  // Track slow requests
+  if (duration > SLOW_REQUEST_THRESHOLD_MS) {
+    const slowRequest = {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      path: endpoint,
+      duration_ms: duration,
+      statusCode: res.statusCode
+    };
+
+    performanceMetrics.requests.slowRequests.push(slowRequest);
+
+    // Keep only last N slow requests
+    if (performanceMetrics.requests.slowRequests.length > MAX_SLOW_REQUESTS_STORED) {
+      performanceMetrics.requests.slowRequests.shift();
+    }
+
+    log('WARN', 'Slow request detected', slowRequest);
+  }
+}
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const CLOUD_AUTH_ENABLED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+const supabaseAnonClient = CLOUD_AUTH_ENABLED
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 const HOST = IS_PRODUCTION ? '0.0.0.0' : 'localhost';
 
 // Default ports
@@ -124,25 +310,200 @@ function getSessionForToken(token) {
   return sessions.get(token) || null;
 }
 
+function runAsync(fn) {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
+async function authenticateSupabaseToken(token) {
+  if (!CLOUD_AUTH_ENABLED || !token) {
+    return null;
+  }
+
+  const { data, error } = await supabaseAnonClient.auth.getUser(token);
+  if (error || !data?.user) {
+    return null;
+  }
+
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  });
+
+  return { user: data.user, client };
+}
+
+async function resolveSessionFromToken(token) {
+  if (!token) {
+    return null;
+  }
+
+  const supabaseSession = await authenticateSupabaseToken(token);
+  if (supabaseSession) {
+    return {
+      type: 'cloud',
+      supabaseClient: supabaseSession.client,
+      user: supabaseSession.user,
+    };
+  }
+
+  const session = getSessionForToken(token);
+  if (session) {
+    return {
+      type: 'local',
+      session,
+    };
+  }
+
+  return null;
+}
+
 // --- Express App ---
 const app = express();
-app.use(cors());
+// --- CORS Configuration ---
+const corsOptions = IS_PRODUCTION
+  ? {
+      origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    }
+  : { origin: true, credentials: true };
+
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(requestTimer);
 app.use(express.static(__dirname));
 app.use('/shared-assets', express.static(SHARED_ASSETS_DIR));
 
+// Track request counts
+app.use((req, res, next) => {
+  requestCount++;
+  res.on('finish', () => {
+    if (res.statusCode >= 400) errorCount++;
+  });
+  next();
+});
+
+// --- Health Check Endpoint ---
+app.get('/health', (req, res) => {
+  const uptimeSeconds = Math.floor((Date.now() - APP_START_TIME.getTime()) / 1000);
+  const dbExists = fs.existsSync(DB_PATH);
+
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: {
+      seconds: uptimeSeconds,
+      human: `${Math.floor(uptimeSeconds / 3600)}h ${Math.floor((uptimeSeconds % 3600) / 60)}m ${uptimeSeconds % 60}s`
+    },
+    version: '1.0.0',
+    environment: IS_PRODUCTION ? 'production' : 'development',
+    cloud_auth: CLOUD_AUTH_ENABLED ? 'enabled' : 'disabled',
+    database: {
+      path: DB_PATH,
+      exists: dbExists
+    },
+    metrics: {
+      total_requests: requestCount,
+      total_errors: errorCount
+    }
+  };
+
+  // Check Supabase connectivity if cloud auth is enabled
+  if (CLOUD_AUTH_ENABLED && supabaseAnonClient) {
+    health.supabase = {
+      url: SUPABASE_URL,
+      status: 'configured'
+    };
+  }
+
+  const isHealthy = dbExists;
+  res.status(isHealthy ? 200 : 503).json(health);
+});
+
+// --- Readiness Check for Kubernetes/orchestrators ---
+app.get('/ready', (req, res) => {
+  const dbExists = fs.existsSync(DB_PATH);
+  res.status(dbExists ? 200 : 503).json({
+    ready: dbExists,
+    checks: {
+      database: dbExists ? 'pass' : 'fail'
+    }
+  });
+});
+
+// --- Performance Metrics Endpoint ---
+app.get('/metrics', (req, res) => {
+  const uptimeSeconds = Math.floor((Date.now() - APP_START_TIME.getTime()) / 1000);
+
+  // Calculate average response times by endpoint
+  const endpointStats = {};
+  for (const [endpoint, data] of Object.entries(performanceMetrics.requests.byEndpoint)) {
+    endpointStats[endpoint] = {
+      count: data.count,
+      avgTime_ms: data.count > 0 ? Math.round(data.totalTime / data.count) : 0,
+      errors: data.errors
+    };
+  }
+
+  const metrics = {
+    uptime_seconds: uptimeSeconds,
+    requests: {
+      total: performanceMetrics.requests.total,
+      by_endpoint: endpointStats,
+      errors: performanceMetrics.requests.errors,
+      error_rate: performanceMetrics.requests.total > 0
+        ? ((performanceMetrics.requests.errors / performanceMetrics.requests.total) * 100).toFixed(2) + '%'
+        : '0%'
+    },
+    slow_requests: {
+      threshold_ms: SLOW_REQUEST_THRESHOLD_MS,
+      count: performanceMetrics.requests.slowRequests.length,
+      recent: performanceMetrics.requests.slowRequests.slice(-10)
+    },
+    sync: {
+      push_count: performanceMetrics.sync.pushCount,
+      pull_count: performanceMetrics.sync.pullCount,
+      avg_push_time_ms: performanceMetrics.sync.pushCount > 0
+        ? Math.round(performanceMetrics.sync.totalPushTime / performanceMetrics.sync.pushCount)
+        : 0,
+      avg_pull_time_ms: performanceMetrics.sync.pullCount > 0
+        ? Math.round(performanceMetrics.sync.totalPullTime / performanceMetrics.sync.pullCount)
+        : 0
+    },
+    rate_limiting: {
+      active_ips: rateLimitMap.size,
+      limits: RATE_LIMITS
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  res.json(metrics);
+});
+
 // --- Auth Middleware ---
-function requireAuth(req, res, next) {
+const requireAuth = runAsync(async (req, res, next) => {
   const token = getRequestToken(req);
-  const session = getSessionForToken(token);
-  if (!session) {
+  const context = await resolveSessionFromToken(token);
+  if (!context) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  req.session = session;
   req.sessionToken = token;
+  if (context.type === 'cloud') {
+    req.session = { type: 'cloud', username: context.user.email };
+    req.user = context.user;
+    req.supabase = context.supabaseClient;
+  } else {
+    req.session = context.session;
+  }
+
   next();
-}
+});
 
 function openDb() {
   if (!fs.existsSync(DB_PATH)) {
@@ -304,15 +665,25 @@ function createAuthenticatedWebSocketServer(port) {
     host: HOST,
     verifyClient: (info, done) => {
       const token = getRequestToken(info.req);
-      const session = getSessionForToken(token);
-      if (!session) {
-        done(false, 401, 'Unauthorized');
-        return;
-      }
+      resolveSessionFromToken(token)
+        .then((context) => {
+          if (!context) {
+            done(false, 401, 'Unauthorized');
+            return;
+          }
 
-      info.req.session = session;
-      info.req.sessionToken = token;
-      done(true);
+          info.req.sessionToken = token;
+          if (context.type === 'cloud') {
+            info.req.session = { type: 'cloud', username: context.user.email };
+            info.req.supabase = context.supabaseClient;
+            info.req.user = context.user;
+          } else {
+            info.req.session = context.session;
+          }
+
+          done(true);
+        })
+        .catch(() => done(false, 401, 'Unauthorized'));
     },
   });
 }
@@ -344,28 +715,47 @@ app.post('/auth/login', (req, res) => {
 });
 
 // POST /auth/logout — invalidate token
-app.post('/auth/logout', requireAuth, (req, res) => {
+app.post('/auth/logout', requireAuth, runAsync(async (req, res) => {
   const token = req.sessionToken;
-  sessions.delete(token);
+  if (req.supabase) {
+    try {
+      await req.supabase.auth.signOut();
+    } catch (_) {}
+  }
+
+  if (token && sessions.has(token)) {
+    sessions.delete(token);
+  }
+
   closeSessionSockets(token);
   res.json({ success: true });
-});
+}));
 
 // GET /auth/verify — check if token is valid
-app.get('/auth/verify', (req, res) => {
+app.get('/auth/verify', runAsync(async (req, res) => {
   const token = getRequestToken(req);
-  const session = getSessionForToken(token);
-  if (session) {
-    return res.json({ valid: true, username: session.username });
+  const context = await resolveSessionFromToken(token);
+  if (context) {
+    const username = context.type === 'cloud'
+      ? context.user?.email
+      : context.session?.username;
+    return res.json({ valid: true, username });
   }
   res.json({ valid: false });
-});
+}));
 
 // --- API Routes (protected) ---
 
 // GET /api/runtime-config — expose dynamic client runtime configuration
-app.get('/api/runtime-config', requireAuth, (req, res) => {
-  res.json({ wsPort: WS_PORT });
+app.get('/api/runtime-config', (req, res) => {
+  res.json({
+    wsPort: WS_PORT,
+    cloudAuth: {
+      enabled: CLOUD_AUTH_ENABLED,
+      supabaseUrl: CLOUD_AUTH_ENABLED ? SUPABASE_URL : null,
+      supabaseAnonKey: CLOUD_AUTH_ENABLED ? SUPABASE_ANON_KEY : null,
+    },
+  });
 });
 
 // GET /api/transcriptions — list all, newest first
@@ -764,12 +1154,417 @@ app.delete('/api/transcriptions/:id/tags/:tag_id', requireAuth, (req, res) => {
   }
 });
 
+// --- Cloud API Routes (Supabase) ---
+
+// GET /api/profile — Get user profile (cloud mode only)
+app.get('/api/profile', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Profile only available in cloud mode' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', req.user.id)
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data || { id: req.user.id, email: req.user.email });
+}));
+
+// PATCH /api/profile — Update user profile (cloud mode only)
+app.patch('/api/profile', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Profile only available in cloud mode' });
+  }
+
+  const { full_name, preferences } = req.body;
+
+  const updateData = { updated_at: new Date().toISOString() };
+  if (full_name !== undefined) updateData.full_name = full_name;
+  if (preferences !== undefined) updateData.preferences = preferences;
+
+  const { data, error } = await req.supabase
+    .from('profiles')
+    .update(updateData)
+    .eq('id', req.user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+}));
+
+// POST /api/profile/avatar — Upload avatar (cloud mode only)
+app.post('/api/profile/avatar', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Avatar upload only available in cloud mode' });
+  }
+
+  // For now, return error - file upload requires multipart handling
+  res.status(501).json({ error: 'Avatar upload not yet implemented. Use Supabase dashboard.' });
+}));
+
+// --- Cloud Sync Routes ---
+
+// GET /api/sync/status — Get sync status
+app.get('/api/sync/status', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.json({ cloudEnabled: false, mode: 'local' });
+  }
+
+  const { count: transcriptionCount, error } = await req.supabase
+    .from('transcriptions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({
+    cloudEnabled: true,
+    mode: 'cloud',
+    cloudTranscriptions: transcriptionCount || 0
+  });
+}));
+
+// POST /api/sync/push — Push local transcriptions to cloud
+app.post('/api/sync/push', rateLimit, validateSyncInput, requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Sync only available in cloud mode' });
+  }
+
+  const { transcriptions } = req.body;
+  if (!Array.isArray(transcriptions) || transcriptions.length === 0) {
+    return res.status(400).json({ error: 'No transcriptions provided' });
+  }
+
+  const results = { synced: 0, conflicts: 0, errors: [] };
+
+  for (const t of transcriptions) {
+    try {
+      // Check if transcription already exists
+      const { data: existing } = await req.supabase
+        .from('transcriptions')
+        .select('id, version')
+        .eq('user_id', req.user.id)
+        .eq('local_id', t.local_id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing (with version check for conflict detection)
+        const { error: updateError } = await req.supabase
+          .from('transcriptions')
+          .update({
+            text: t.text,
+            timestamp: t.timestamp,
+            version: existing.version + 1,
+            source_updated_at: new Date().toISOString(),
+            sync_status: 'synced',
+            synced_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .eq('version', existing.version);
+
+        if (updateError) {
+          // Version mismatch = conflict
+          if (updateError.code === 'PGRST116') {
+            results.conflicts++;
+            // Record conflict
+            await req.supabase.from('sync_conflicts').insert({
+              user_id: req.user.id,
+              transcription_id: existing.id,
+              local_version: t.version || 1,
+              remote_version: existing.version,
+              local_payload: t,
+              remote_payload: existing
+            });
+          } else {
+            results.errors.push({ local_id: t.local_id, error: updateError.message });
+          }
+        } else {
+          results.synced++;
+        }
+      } else {
+        // Insert new
+        const { error: insertError } = await req.supabase
+          .from('transcriptions')
+          .insert({
+            user_id: req.user.id,
+            local_id: t.local_id,
+            text: t.text,
+            timestamp: t.timestamp,
+            version: 1,
+            source_updated_at: new Date().toISOString(),
+            sync_status: 'synced',
+            synced_at: new Date().toISOString()
+          });
+
+        if (insertError) {
+          results.errors.push({ local_id: t.local_id, error: insertError.message });
+        } else {
+          results.synced++;
+        }
+      }
+    } catch (err) {
+      results.errors.push({ local_id: t.local_id, error: err.message });
+    }
+  }
+
+  res.json(results);
+}));
+
+// GET /api/sync/pull — Pull cloud transcriptions
+app.get('/api/sync/pull', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Sync only available in cloud mode' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('transcriptions')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('timestamp', { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ transcriptions: data || [] });
+}));
+
+// GET /api/cloud/transcriptions — List transcriptions from cloud
+app.get('/api/cloud/transcriptions', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud transcriptions only available in cloud mode' });
+  }
+
+  const startDate = req.query.start;
+  const endDate = req.query.end;
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = parseInt(req.query.offset) || 0;
+
+  let query = req.supabase
+    .from('transcriptions')
+    .select('*', { count: 'exact' })
+    .eq('user_id', req.user.id)
+    .order('timestamp', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (startDate) {
+    query = query.gte('timestamp', startDate);
+  }
+  if (endDate) {
+    query = query.lt('timestamp', endDate);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({
+    transcriptions: data || [],
+    total: count || 0,
+    limit,
+    offset
+  });
+}));
+
+// GET /api/cloud/stats — Dashboard stats from cloud
+app.get('/api/cloud/stats', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud stats only available in cloud mode' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('transcriptions')
+    .select('text, timestamp')
+    .eq('user_id', req.user.id)
+    .order('timestamp', { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ transcriptions: data || [] });
+}));
+
+// --- Cloud Tags & Favorites ---
+
+// GET /api/cloud/tags — List tags from cloud
+app.get('/api/cloud/tags', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud tags only available in cloud mode' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('tags')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('name');
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ tags: data || [] });
+}));
+
+// POST /api/cloud/tags — Create tag in cloud
+app.post('/api/cloud/tags', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud tags only available in cloud mode' });
+  }
+
+  const { name, color } = req.body;
+
+  if (!name || name.trim().length === 0) {
+    return res.status(400).json({ error: 'Tag name is required' });
+  }
+
+  const { data, error } = await req.supabase
+    .from('tags')
+    .insert({
+      user_id: req.user.id,
+      name: name.trim(),
+      color: color || '#007AFF'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Tag already exists' });
+    }
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+}));
+
+// DELETE /api/cloud/tags/:id — Delete tag from cloud
+app.delete('/api/cloud/tags/:id', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud tags only available in cloud mode' });
+  }
+
+  const tagId = req.params.id;
+
+  const { error } = await req.supabase
+    .from('tags')
+    .delete()
+    .eq('id', tagId)
+    .eq('user_id', req.user.id);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ success: true });
+}));
+
+// PATCH /api/cloud/transcriptions/:id — Update transcription in cloud (favorite, tags)
+app.patch('/api/cloud/transcriptions/:id', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Cloud transcriptions only available in cloud mode' });
+  }
+
+  const transcriptionId = req.params.id;
+  const { is_favorite, tags } = req.body;
+
+  const updateData = { updated_at: new Date().toISOString() };
+  if (is_favorite !== undefined) updateData.is_favorite = is_favorite;
+  if (tags !== undefined) updateData.tags = tags;
+
+  const { data, error } = await req.supabase
+    .from('transcriptions')
+    .update(updateData)
+    .eq('id', transcriptionId)
+    .eq('user_id', req.user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!data) {
+    return res.status(404).json({ error: 'Transcription not found' });
+  }
+
+  res.json(data);
+}));
+
+// POST /api/sync/push-metadata — Push local favorites/tags to cloud
+app.post('/api/sync/push-metadata', requireAuth, runAsync(async (req, res) => {
+  if (!req.supabase) {
+    return res.status(400).json({ error: 'Sync only available in cloud mode' });
+  }
+
+  const { favorites, tags, transcriptionTags } = req.body;
+  const results = { favorites: 0, tags: 0, associations: 0, errors: [] };
+
+  // Sync tags
+  if (Array.isArray(tags)) {
+    for (const tag of tags) {
+      try {
+        const { error } = await req.supabase
+          .from('tags')
+          .upsert({
+            user_id: req.user.id,
+            name: tag.name,
+            color: tag.color || '#007AFF'
+          }, { onConflict: 'user_id,name' });
+
+        if (!error) {
+          results.tags++;
+        } else {
+          results.errors.push({ type: 'tag', name: tag.name, error: error.message });
+        }
+      } catch (err) {
+        results.errors.push({ type: 'tag', name: tag.name, error: err.message });
+      }
+    }
+  }
+
+  // Sync favorites - update transcriptions
+  if (Array.isArray(favorites)) {
+    for (const fav of favorites) {
+      try {
+        const { error } = await req.supabase
+          .from('transcriptions')
+          .update({ is_favorite: true })
+          .eq('user_id', req.user.id)
+          .eq('local_id', fav.local_id);
+
+        if (!error) {
+          results.favorites++;
+        }
+      } catch (err) {
+        results.errors.push({ type: 'favorite', local_id: fav.local_id, error: err.message });
+      }
+    }
+  }
+
+  res.json(results);
+}));
+
 // --- Static pages (client-side auth) ---
 // Serve all HTML pages statically - auth is handled by client-side JavaScript (auth.js)
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 app.get('/favorites', (req, res) => res.sendFile(path.join(__dirname, 'favorites.html')));
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/signup.html', (req, res) => res.sendFile(path.join(__dirname, 'signup.html')));
 app.get('/design-system-demo.html', (req, res) => res.sendFile(path.join(__dirname, 'design-system-demo.html')));
 
 // --- Start HTTP Server ---

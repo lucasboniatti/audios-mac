@@ -1,0 +1,48 @@
+schema: 1
+story: 'EPIC-007'
+story_title: 'AudioFlow Web Sync - arquitetura do companion cloud'
+gate: PASS
+status_reason: 'A arquitetura revisada incorporou os blockers do QA para runtime com anon key + JWT + RLS, busca segura e reconciliacao explicita de conflitos, mantendo fallback offline e coerencia com o PRD.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-14T20:39:33-03:00'
+
+top_issues: []
+
+waiver:
+  active: false
+
+quality_score: 94
+expires: '2026-03-28T20:39:38-03:00'
+
+evidence:
+  tests_reviewed: 3
+  risks_identified: 1
+  trace:
+    ac_covered: [17, 18, 19]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'O documento agora restringe service role a scripts administrativos e define runtime com anon key, JWT do usuario e RLS por requisicao.'
+  performance:
+    status: PASS
+    notes: 'A arquitetura preserva fallback local e sync em background, evitando dependencia hard da nuvem para operacao basica.'
+  reliability:
+    status: PASS
+    notes: 'A trilha de sync adiciona versionamento, estado de conflito e registro dedicado em sync_conflicts, removendo perda silenciosa por last-write-wins.'
+  maintainability:
+    status: PASS
+    notes: 'O roadmap foi renumerado para 9.1-9.5 e alinhado ao PRD e ao epic formal, reduzindo ambiguidade entre companion local e future state cloud.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Se o EPIC-007 avancar para implementacao, gerar stories 9.1-9.5 somente a partir desta arquitetura revisada e do epic formalizado, nao do rascunho antigo com numeracao 7.x.'
+      refs:
+        - 'docs/architecture/audioflow-web-supabase-architecture.md:737'
+        - 'docs/epics/EPIC-007-AudioFlow-Web-Sync.md:1'
+    - action: 'Antes do desenvolvimento, considerar uma revisao dedicada de RLS e modelo de dados com @data-engineer para traduzir os guardrails em schema e migrations executaveis.'
+      refs:
+        - 'docs/architecture/audioflow-web-supabase-architecture.md:154'
+        - 'docs/qa/QA_FIX_REQUEST.md:1'

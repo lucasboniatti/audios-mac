@@ -86,6 +86,24 @@
       "description": "Manter design tokens e componentes reutilizáveis para o companion web e futuras superfícies do AudioFlow",
       "scope": "tokens.yaml como source of truth, exports CSS/JSON/Tailwind/Swift, catálogo visual local e componentes React/Swift",
       "behavior": "Artefatos gerados podem ser reconstruídos a partir do source of truth sem reintroduzir estilos hardcoded"
+    },
+    "FR-015": {
+      "title": "Conta de usuário e perfil cloud para o companion web",
+      "description": "Permitir autenticação por email/senha, sessão cloud e perfil com avatar para o companion web do AudioFlow",
+      "scope": "Supabase Auth, tabela profiles e storage de avatar",
+      "behavior": "Frontend web preserva fallback local, mas usa autenticação remota e perfil por usuário quando o modo cloud estiver habilitado"
+    },
+    "FR-016": {
+      "title": "Sincronização híbrida local/cloud das transcrições",
+      "description": "Sincronizar transcrições e metadados do companion web entre o banco local e um backend cloud sem quebrar o modo offline do app macOS",
+      "scope": "CoreData/SQLite local como origem operacional, Supabase como camada de conta, backup e multi-sessão",
+      "behavior": "Sincronização exige detecção explícita de conflito e não pode usar perda silenciosa de dados por last-write-wins simples"
+    },
+    "FR-017": {
+      "title": "Dashboard cloud com filtros e fallback offline",
+      "description": "Disponibilizar filtros por data, paginação e métricas cloud-aware no dashboard web, preservando fallback local quando a nuvem estiver indisponível",
+      "scope": "Gravações, dashboard, tags, favoritos e preferências no companion web autenticado",
+      "behavior": "Filtros e estatísticas funcionam por usuário autenticado e degradam para leitura local quando não houver sync disponível"
     }
   },
   "non_functional_requirements": {
@@ -182,6 +200,24 @@
       "as_a": "mantenedor do produto",
       "i_want_to": "evoluir tokens e componentes compartilhados em um design system documentado",
       "so_that": "posso manter consistência visual entre o companion web e futuras superfícies sem retrabalho"
+    },
+    {
+      "id": "US-013",
+      "as_a": "usuário macOS do companion web",
+      "i_want_to": "entrar com minha própria conta e manter um perfil com avatar",
+      "so_that": "posso acessar meus dados com identidade própria no modo cloud"
+    },
+    {
+      "id": "US-014",
+      "as_a": "usuário macOS com companion web",
+      "i_want_to": "sincronizar transcrições, favoritos e tags entre a base local e a nuvem",
+      "so_that": "posso recuperar e continuar meu histórico sem perder dados quando trocar de sessão ou dispositivo"
+    },
+    {
+      "id": "US-015",
+      "as_a": "usuário macOS do dashboard web",
+      "i_want_to": "filtrar o dashboard por período mesmo com conta cloud",
+      "so_that": "posso analisar meu uso mantendo fallback local quando a sincronização estiver indisponível"
     }
   ],
   "acceptance_criteria": {
@@ -200,7 +236,10 @@
     "AC-013": "Preferências do dashboard são reaplicadas entre sessões",
     "AC-014": "Exportações CSV e JSON do frontend geram arquivos válidos",
     "AC-015": "Build de tokens gera artefatos válidos em CSS, JSON, Tailwind e Swift a partir de tokens.yaml",
-    "AC-016": "Storybook e demo local documentam tokens e componentes compartilhados para adoção incremental"
+    "AC-016": "Storybook e demo local documentam tokens e componentes compartilhados para adoção incremental",
+    "AC-017": "Modo cloud do companion web usa autenticação por conta, perfil por usuário e storage de avatar sem expor service role em requisições de usuário",
+    "AC-018": "Sincronização entre base local e nuvem preserva fallback offline e trata conflitos sem perda silenciosa de dados",
+    "AC-019": "Dashboard cloud aplica filtros por data e métricas por usuário, mantendo leitura local degradada quando a nuvem não estiver disponível"
   },
   "constraints": {
     "CON-001": "MacOS 12.0+ (Monterey) mínimo para Speech Recognition nativo",
@@ -210,7 +249,10 @@
     "CON-005": "Frontend web pode ler AudioFlow.sqlite apenas em modo read-only",
     "CON-006": "Metadados mutáveis do frontend ficam em banco SQLite local separado (audioflow_design.db)",
     "CON-007": "Autenticação atual do frontend é local, por senha fixa e sessão simples; provedores externos ficam fora do escopo atual",
-    "CON-008": "tokens.yaml permanece a fonte única de verdade do design system; arquivos *.generated.* são regeneráveis e não devem ser editados manualmente"
+    "CON-008": "tokens.yaml permanece a fonte única de verdade do design system; arquivos *.generated.* são regeneráveis e não devem ser editados manualmente",
+    "CON-009": "No modo cloud, requisições de usuário ao Supabase devem usar anon key + JWT do usuário com RLS; service role fica restrito a migrações e automações administrativas",
+    "CON-010": "Sincronização cloud não pode depender apenas de last-write-wins silencioso; conflitos exigem versionamento ou reconciliação explícita",
+    "CON-011": "App macOS e companion web local continuam funcionais offline, com sync cloud tratado como enhancement e não como pré-requisito operacional"
   },
   "moscow_prioritization": {
     "must_have": [
@@ -231,7 +273,10 @@
       "FR-011: Tags para transcrições",
       "FR-012: Preferências do usuário no frontend web",
       "FR-013: Exportação estruturada no frontend web",
-      "FR-014: Design system compartilhado"
+      "FR-014: Design system compartilhado",
+      "FR-015: Conta de usuário e perfil cloud para o companion web",
+      "FR-016: Sincronização híbrida local/cloud das transcrições",
+      "FR-017: Dashboard cloud com filtros e fallback offline"
     ],
     "wont_have": [
       "Multi-idioma",
@@ -251,13 +296,13 @@
     "web_companion": "Express + better-sqlite3 + WebSocket servindo dashboard local",
     "design_database": "SQLite separado (audioflow_design.db) para favoritos, tags e preferências",
     "web_auth": "Sessões locais simples com token Bearer e senha local inicial",
-    "design_system": "tokens.yaml como source of truth com build Node gerando exports CSS/JSON/Tailwind/Swift, Storybook local e componentes compartilhados para web e SwiftUI"
+    "design_system": "tokens.yaml como source of truth com build Node gerando exports CSS/JSON/Tailwind/Swift, Storybook local e componentes compartilhados para web e SwiftUI",
+    "cloud_sync_future": "Evolução futura avaliada em docs/architecture/audioflow-web-supabase-architecture.md, com autenticação Supabase, perfil, sync híbrido e filtros cloud sob guardrails de QA"
   },
   "out_of_scope": [
     "Suporte a Windows/Linux",
     "Multi-idioma",
-    "Cloud sync",
-    "Cloud sync do dashboard web",
+    "Cloud sync via iCloud",
     "Edição de transcrições",
     "Compartilhamento direto",
     "Integração com outros apps",

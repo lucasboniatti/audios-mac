@@ -1,0 +1,54 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm --prefix frontend ci
+
+      - name: Run tests
+        run: npm --prefix frontend test
+        continue-on-error: true
+
+      - name: Build for staging
+        run: npm --prefix frontend run build
+        env:
+          NODE_ENV: staging
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo ""
+          echo "Configure your staging deployment target:"
+          echo "- Railway: railway up --environment staging"
+          echo "- Vercel: vercel --env staging"
+          echo "- Fly.io: fly deploy --app audioflow-staging"
+
+      # Uncomment when deployment target is configured:
+      # - name: Deploy to Railway Staging
+      #   uses: bervProject/railway-deploy@v1.0.0
+      #   with:
+      #     railway_token: ${{ secrets.RAILWAY_STAGING_TOKEN }}

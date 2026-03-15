@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ÁudioFlow - Criar conta cloud</title>
+  <link rel="stylesheet" href="/dist/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="/theme.js"></script>
+  <script src="/auth.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, var(--color-primary) 0%, var(--color-surface) 45%, var(--color-elevated) 100%);
+    }
+    .login-logo {
+      width: 48px;
+      height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+      font-size: 34px;
+    }
+    .signup-note {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; max-width: 420px; padding: 16px;">
+    <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px;">
+      <div class="login-logo">
+        <span class="material-symbols-outlined">cloud_sync</span>
+      </div>
+      <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Nova conta cloud</h1>
+      <p class="signup-note">Use seu email para acessar o companion com Supabase Auth.</p>
+    </div>
+
+    <div class="card-elevated" style="padding: 24px;">
+      <div style="margin-bottom: 12px;">
+        <label for="signup-name" class="text-label" style="display: block; margin-bottom: 6px;">Nome completo</label>
+        <input id="signup-name" type="text" placeholder="Seu nome" class="input-audioflow" style="width: 100%;"/>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label for="signup-email" class="text-label" style="display: block; margin-bottom: 6px;">Email</label>
+        <input id="signup-email" type="email" placeholder="voce@email.com" class="input-audioflow" style="width: 100%;"/>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label for="signup-password" class="text-label" style="display: block; margin-bottom: 6px;">Senha</label>
+        <input id="signup-password" type="password" placeholder="Senha segura" class="input-audioflow" style="width: 100%;"/>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label for="signup-confirm" class="text-label" style="display: block; margin-bottom: 6px;">Confirmar senha</label>
+        <input id="signup-confirm" type="password" placeholder="Repita a senha" class="input-audioflow" style="width: 100%;"/>
+      </div>
+      <div id="signup-error" class="login-error hidden"></div>
+      <div id="signup-success" class="login-info hidden">
+        Conta criada. Verifique seu email e depois use o login cloud.
+      </div>
+      <button id="signup-btn" class="btn-primary" style="width: 100%;">
+        <span id="signup-btn-text">Criar conta cloud</span>
+      </button>
+      <p style="text-align: center; margin-top: 12px;">
+        Já tem conta? <a href="/login.html">Voltar ao login</a>
+      </p>
+      <div class="login-info" style="margin-top: 16px;">
+        <p id="cloud-note" class="signup-note">Este ambiente precisa de SUPABASE_URL e SUPABASE_ANON_KEY para funcionar.</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px; display: flex; justify-content: center;">
+      <button onclick="toggleDarkMode()" class="theme-btn">
+        <span class="material-symbols-outlined" id="theme-icon">light_mode</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function updateThemeIcon() {
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = isDarkMode() ? 'light_mode' : 'dark_mode';
+    }
+    updateThemeIcon();
+
+    const origToggle = window.toggleDarkMode;
+    window.toggleDarkMode = function() {
+      origToggle();
+      updateThemeIcon();
+    };
+
+    let cloudEnabled = true;
+    const errorEl = document.getElementById('signup-error');
+    const successEl = document.getElementById('signup-success');
+    const btnEl = document.getElementById('signup-btn');
+    const btnTextEl = document.getElementById('signup-btn-text');
+
+    async function initSignupPage() {
+      const config = await AuthAPI.getRuntimeConfig().catch(() => null);
+      cloudEnabled = !!config?.cloudAuth?.enabled;
+      if (!cloudEnabled) {
+        errorEl.textContent = 'Cloud auth não habilitado neste ambiente.';
+        errorEl.classList.remove('hidden');
+        btnEl.disabled = true;
+      }
+    }
+
+    async function handleSignup() {
+      if (!cloudEnabled) {
+        return;
+      }
+
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      if (!email || !password) {
+        errorEl.textContent = 'Email e senha são obrigatórios.';
+        errorEl.classList.remove('hidden');
+        successEl.classList.add('hidden');
+        return;
+      }
+
+      if (password !== confirm) {
+        errorEl.textContent = 'As senhas não conferem.';
+        errorEl.classList.remove('hidden');
+        successEl.classList.add('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      successEl.classList.add('hidden');
+      btnTextEl.textContent = 'Criando...';
+
+      try {
+        await AuthAPI.cloudSignup({ name, email, password });
+        successEl.classList.remove('hidden');
+        btnTextEl.textContent = 'Criar conta cloud';
+      } catch (err) {
+        errorEl.textContent = err.message || 'Erro ao criar conta cloud';
+        errorEl.classList.remove('hidden');
+        btnTextEl.textContent = 'Criar conta cloud';
+      }
+    }
+
+    btnEl.addEventListener('click', handleSignup);
+
+    initSignupPage();
+  </script>
+</body>
+</html>

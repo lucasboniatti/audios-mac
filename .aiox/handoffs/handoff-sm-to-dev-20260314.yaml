@@ -1,0 +1,75 @@
+handoff:
+  from_agent: "sm"
+  to_agent: "dev"
+  timestamp: "2026-03-14T22:00:00Z"
+  consumed: true
+
+  story_context:
+    epic_id: "EPIC-007"
+    story_ids:
+      - "9.1"
+      - "9.2"
+      - "9.3"
+      - "9.4"
+      - "9.5"
+    story_status: "Draft"
+    current_task: "Formalizar backlog cloud-sync com ACs/QA e enviar para implementação"
+    branch: "master"
+
+  summary: |
+    Criei as stories 9.1‑9.5 para o EPIC-007 (AudioFlow Web Sync) seguindo o PRD renumerado e o
+    documento de arquitetura Supabase revisado. Cada story descreve o que deve funcionar
+    (autenticacao cloud, perfil/avatar/preferencias, sync versionado, filtros de dashboard,
+    tags/favoritos isolados) com dependencias claras, tarefas e testes manuais/automáticos.
+    `npm run lint`, `npm run typecheck` e `npm test` estiveram verdes depois das edicoes.
+
+  decisions:
+    - "O modo cloud usa Supabase Auth com anon key + JWT por requisicao para preservar RLS."
+    - "Transcricoes na nuvem têm `user_id`, `local_id`, `version`, `sync_status` e `sync_conflicts`."
+    - "Dashboard e listas usam filtros validados por periodo e degradam para o fallback local."
+    - "Tags/favoritos cloud ficam em esquema por usuario e reconciliam metadata sem sobrescrever dados locais."
+    - "O companion local (EPIC-002) continua funcionando offline; cloud é enhancement."
+
+  files_created:
+    - "docs/stories/9.1.story.md — Autenticacao cloud + fallback local + QA."
+    - "docs/stories/9.2.story.md — Perfil/Avatar/Preferencias cloud com storage avatars."
+    - "docs/stories/9.3.story.md — Sync versionado e tratamento de conflitos com supabase."
+    - "docs/stories/9.4.story.md — Dashboard cloud filtravel e degradacao controlada."
+    - "docs/stories/9.5.story.md — Metadados de tags/favoritos isolados por usuario cloud."
+
+  architecture: |
+    Supabase Auth ← (anon key + JWT) → Node bridge (Express + middleware `requireAuth`)
+                                 ↓
+                  Supabase Postgres (profiles, transcriptions, sync_conflicts, tags, storage avatars)
+                                 ↑
+        Companion local (CoreData / AudioFlow.sqlite read-only) ← Node.js bridge (server.js)
+                                  ↕ WebSocket / REST (dashboard, tags, preferences)
+    O PRD define FR-015/FR-016/FR-017 para autenticacao, sync e analytics; o doc de arquitetura revisto
+    descreve RLS, storage policies e algoritmos de reconciliação (version check + sync_conflicts).
+
+  api_endpoints:
+    - "POST /signup — Supabase Auth signup, trigger cria `profiles` e default preferences."
+    - "POST /auth/login — Supabase Auth login, retorna JWT usado nos headers."
+    - "GET /api/profile, PATCH /api/profile, POST/DELETE /api/profile/avatar — CRUD perfil/avatar."
+    - "GET /api/transcriptions, GET /api/transcriptions/search, GET /api/transcriptions/stats — listagem e filtros por periodo com `ilike`."
+    - "POST/PATCH/DELETE /api/favorites e /api/tags e endpoints de transcriptions/:id/tags — metadata por usuario."
+
+  what_works:
+    - "Stories alinharam backlog com o PRD e architecture (EPIC-007)."
+    - "QA Scripts (`lint`, `typecheck`, `test`) continuam verdes."
+    - "Documentacao de requisitos aponta dependencias entre as stories."
+    - "Gate de QA `epic-007-audioflow-web-sync-architecture.yml` explicado e passa o contexto."
+
+  blockers: []
+
+  next_actions:
+    - "Executar `@sm *story-checklist` para validar clareza e referências das cinco stories antes de implementar."
+    - "Comecar por `9.1` (+ `@dev *develop 9.1`) para entregar auth cloud e consolidar o glue com `requireAuth`."
+    - "Criar PR separado quando o lote de stories cloud estiver implementado e testes passarem."
+    - "Preservar artefatos de arquitetura e QA (docs/qa e supabase architecture) durante o desenvolvimento."
+
+  tech_context:
+    runtime: "Node.js 24+ (Express 5 + ws + better-sqlite3 readonly bridge)"
+    oauth: "Supabase Auth (anon key + JWT, RLS por usuario)"
+    storage: "Supabase Storage (avatars bucket) + design tokens + fallback local SQLite"
+    testing: "`npm run lint`, `npm run typecheck`, `npm test`"

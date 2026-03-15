@@ -220,12 +220,7 @@
 
     async function toggleFavorite(id, currentlyFavorite) {
       try {
-        if (currentlyFavorite) {
-          await AuthAPI.removeFavorite(id);
-        } else {
-          await AuthAPI.addFavorite(id);
-        }
-
+        await AuthAPI.toggleFavorite(id, !currentlyFavorite);
         await refreshVisibleTranscriptions();
         showToast(currentlyFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
       } catch (err) {
@@ -272,17 +267,32 @@
       }
 
       try {
-        const tags = await AuthAPI.getTags();
+        const tags = await AuthAPI.getTagsForMode();
         let tag = tags.find((candidate) => candidate.name.toLowerCase() === normalizedName.toLowerCase());
 
         if (!tag) {
-          tag = await AuthAPI.createTag({
+          tag = await AuthAPI.createTagForMode({
             name: normalizedName,
             color: pickTagColor(normalizedName),
           });
         }
 
-        await AuthAPI.addTagToTranscription(transcriptionId, tag.id);
+        if (AuthAPI.isCloudMode()) {
+          // Cloud mode - update transcription with new tag
+          const cloudData = await AuthAPI.pullFromCloud();
+          const cloudT = cloudData.transcriptions?.find(t => t.local_id === transcriptionId);
+          if (cloudT) {
+            const currentTags = cloudT.tags || [];
+            if (!currentTags.includes(normalizedName)) {
+              await AuthAPI.updateCloudTranscription(cloudT.id, {
+                tags: [...currentTags, normalizedName]
+              });
+            }
+          }
+        } else {
+          await AuthAPI.addTagToTranscription(transcriptionId, tag.id);
+        }
+
         await refreshVisibleTranscriptions();
         showToast(`Tag ${tag.name} aplicada`);
       } catch (err) {
@@ -377,16 +387,69 @@
 
     // --- Fetch data ---
     let currentTranscriptionsRequest = 0;
+    let syncInProgress = false;
+
+    async function performInitialSync() {
+      if (syncInProgress) return;
+      if (!AuthAPI.isCloudMode()) return;
+
+      syncInProgress = true;
+      try {
+        showToast('Sincronizando com a nuvem...');
+        const result = await AuthAPI.syncLocalToCloud();
+        showToast(`${result.synced || 0} transcrições sincronizadas!`);
+      } catch (err) {
+        console.error('Sync error:', err);
+      } finally {
+        syncInProgress = false;
+      }
+    }
 
     async function loadTranscriptions(query = '') {
       const requestId = ++currentTranscriptionsRequest;
-      const normalizedQuery = query.trim();
-      const endpoint = normalizedQuery
-        ? `${API}/api/transcriptions/search?q=${encodeURIComponent(normalizedQuery)}`
-        : `${API}/api/transcriptions`;
+      const isCloud = AuthAPI.isCloudMode();
 
       try {
-        const data = await AuthAPI.fetchJSON(endpoint, {}, 'Unable to load transcriptions');
+        let data;
+
+        if (isCloud) {
+          // Cloud mode - use cloud endpoints
+          if (query) {
+            // Search in cloud (using pull + client-side filter for now)
+            const cloudData = await AuthAPI.pullFromCloud();
+            const q = query.toLowerCase();
+            const filtered = (cloudData.transcriptions || []).filter(t =>
+              (t.text || '').toLowerCase().includes(q)
+            );
+            data = { transcriptions: filtered.map(t => ({
+              id: t.local_id || t.id,
+              text: t.text,
+              timestamp: t.timestamp,
+              isFavorite: t.is_favorite,
+              tags: (t.tags || []).map(name => ({ name, color: '#007AFF' }))
+            }))};
+          } else {
+            const cloudData = await AuthAPI.pullFromCloud();
+            data = {
+              transcriptions: (cloudData.transcriptions || []).map(t => ({
+                id: t.local_id || t.id,
+                text: t.text,
+                timestamp: t.timestamp,
+                isFavorite: t.is_favorite,
+                tags: (t.tags || []).map(name => ({ name, color: '#007AFF' }))
+              }))
+            };
+          }
+        } else {
+          // Local mode
+          const normalizedQuery = query.trim();
+          const endpoint = normalizedQuery
+            ? `${API}/api/transcriptions/search?q=${encodeURIComponent(normalizedQuery)}`
+            : `${API}/api/transcriptions`;
+
+          data = await AuthAPI.fetchJSON(endpoint, {}, 'Unable to load transcriptions');
+        }
+
         if (requestId !== currentTranscriptionsRequest) {
           return;
         }
@@ -484,6 +547,13 @@
       if (!authenticated) return;
       await window.AudioFlowTheme.ensurePreferencesLoaded(true);
       updateThemeIcon();
+
+      // Show mode indicator
+      if (AuthAPI.isCloudMode()) {
+        document.getElementById('username-display').textContent += ' ☁️';
+        await performInitialSync();
+      }
+
       await loadTranscriptions();
       connectWS();
     }

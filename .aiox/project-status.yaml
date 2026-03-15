@@ -1,0 +1,19 @@
+status:
+  branch: master
+  modifiedFiles:
+    - .gitignore
+    - docs/stories/4.2.story.md
+    - .aiox-core/core/config/schemas/local-config.schema.json
+    - .aiox-core/core/config/schemas/user-config.schema.json
+    - .aiox-core/core/config/templates/
+  modifiedFilesTotalCount: 99
+  recentCommits:
+    - 'chore: remove duplicate tracked files'
+    - 'feat: add authenticated web companion dashboard'
+  currentEpic: EPIC-001 (AudioFlow)
+  currentStory: 3.4.story
+  lastUpdate: '2026-03-14T21:50:20.028Z'
+  isGitRepo: true
+timestamp: 1773525020030
+ttl: 60
+gitFingerprint: 1773433627573.1538:1773524136554.5598

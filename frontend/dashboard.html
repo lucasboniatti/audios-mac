@@ -957,8 +957,23 @@
 
     async function loadStats() {
       try {
-        const data = await AuthAPI.fetchJSON('/api/transcriptions/stats', {}, 'Unable to load stats');
-        rawData = data.transcriptions || [];
+        let data;
+
+        if (AuthAPI.isCloudMode()) {
+          // Cloud mode
+          const cloudData = await AuthAPI.getStats();
+          rawData = (cloudData.transcriptions || []).map(t => ({
+            id: t.local_id || t.id,
+            text: t.text,
+            timestamp: t.timestamp,
+            isFavorite: t.is_favorite
+          }));
+        } else {
+          // Local mode
+          const localData = await AuthAPI.fetchJSON('/api/transcriptions/stats', {}, 'Unable to load stats');
+          rawData = localData.transcriptions || [];
+        }
+
         applyCurrentDashboardView();
       } catch (err) {
         document.getElementById('top-words').innerHTML = `

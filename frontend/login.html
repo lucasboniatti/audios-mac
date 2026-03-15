@@ -84,14 +84,37 @@
       <p class="login-subtitle">Seu assistente de transcrição</p>
     </div>
 
-    <!-- Login Form -->
-    <div class="card-elevated" style="padding: 24px;">
+    <!-- Cloud Login Form -->
+    <div id="cloud-card" class="card-elevated" style="padding: 24px; margin-bottom: 16px;">
+      <h2 style="margin-bottom: 16px;">Entrar com Cloud (Supabase)</h2>
+      <div style="margin-bottom: 14px;">
+        <label for="cloud-email" class="text-label" style="display: block; margin-bottom: 8px;">Email</label>
+        <input id="cloud-email" type="email" placeholder="seu@email.com" class="input-audioflow" style="width: 100%;" />
+      </div>
+      <div style="margin-bottom: 14px;">
+        <label for="cloud-password" class="text-label" style="display: block; margin-bottom: 8px;">Senha</label>
+        <input id="cloud-password" type="password" placeholder="Senha Supabase" class="input-audioflow" style="width: 100%;" />
+      </div>
+      <div id="cloud-error" class="login-error hidden"></div>
+      <button id="cloud-login-btn" class="btn-primary" style="width: 100%; margin-bottom: 8px;">
+        <span id="cloud-btn-text">Entrar no modo cloud</span>
+      </button>
+      <p style="text-align: center; margin-bottom: 0;">
+        Precisa de conta cloud? <a href="/signup.html">Criar conta</a>
+      </p>
+      <div id="cloud-disabled" class="login-error hidden" style="margin-top: 14px;">
+        Cloud auth não está habilitado neste ambiente. Use o modo local abaixo.
+      </div>
+    </div>
+
+    <!-- Local Login Form -->
+    <div id="local-card" class="card-elevated" style="padding: 24px;">
       <div style="margin-bottom: 16px;">
         <label for="password" class="text-label" style="display: block; margin-bottom: 8px;">Senha</label>
         <input
           id="password"
           type="password"
-          placeholder="Digite a senha"
+          placeholder="Digite a senha (fallback local)"
           class="input-audioflow"
           style="width: 100%;"
         />
@@ -100,15 +123,18 @@
       <div id="error" class="login-error hidden"></div>
 
       <button onclick="handleLogin()" class="btn-primary" style="width: 100%;">
-        <span id="login-btn-text">Entrar</span>
+        <span id="login-btn-text">Entrar localmente</span>
       </button>
     </div>
 
     <!-- Info -->
     <div class="login-info">
       <p>
-        <strong>Demo:</strong> Use a senha padrão<br/>
+        <strong>Demo:</strong> Use a senha padrão local<br/>
         <code>audioflow123</code>
+      </p>
+      <p style="margin-bottom: 0;">
+        Modo local funciona mesmo sem cloud. Se o ambiente estiver configurado para Supabase, use a primeira seção.
       </p>
     </div>
 
@@ -121,23 +147,26 @@
   </div>
 
   <script>
-    // Update theme icon on load
+    let cloudEnabled = false;
+
     function updateThemeIcon() {
       const icon = document.getElementById('theme-icon');
       icon.textContent = isDarkMode() ? 'light_mode' : 'dark_mode';
     }
     updateThemeIcon();
 
-    // Override toggle to update icon
     const origToggle = window.toggleDarkMode;
     window.toggleDarkMode = function() {
       origToggle();
       updateThemeIcon();
     };
 
-    // Enter key submits
     document.getElementById('password').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleLogin();
+    });
+
+    document.getElementById('cloud-password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleCloudLogin();
     });
 
     async function initLoginPage() {
@@ -145,6 +174,14 @@
       if (isValidSession) {
         window.location.href = '/';
         return;
+      }
+
+      const config = await AuthAPI.getRuntimeConfig().catch(() => null);
+      cloudEnabled = !!config?.cloudAuth?.enabled;
+      if (!cloudEnabled) {
+        document.getElementById('cloud-disabled').classList.remove('hidden');
+        document.getElementById('cloud-btn-text').textContent = 'Cloud indisponível';
+        document.getElementById('cloud-login-btn').disabled = true;
       }
 
       document.getElementById('password').focus();
@@ -170,9 +207,40 @@
       } else {
         errorEl.textContent = result.error || 'Erro ao fazer login';
         errorEl.classList.remove('hidden');
-        btnEl.textContent = 'Entrar';
+        btnEl.textContent = 'Entrar localmente';
       }
     }
+
+    async function handleCloudLogin() {
+      if (!cloudEnabled) {
+        return;
+      }
+
+      const email = document.getElementById('cloud-email').value.trim();
+      const password = document.getElementById('cloud-password').value;
+      const errorEl = document.getElementById('cloud-error');
+      const btnEl = document.getElementById('cloud-btn-text');
+
+      if (!email || !password) {
+        errorEl.textContent = 'Email e senha são obrigatórios';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      btnEl.textContent = 'Entrando...';
+      const result = await AuthAPI.cloudLogin(email, password);
+
+      if (result.success) {
+        window.location.href = '/';
+      } else {
+        errorEl.textContent = result.error || 'Erro ao entrar com cloud';
+        errorEl.classList.remove('hidden');
+        btnEl.textContent = 'Entrar no modo cloud';
+      }
+    }
+
+    document.getElementById('cloud-login-btn').addEventListener('click', handleCloudLogin);
 
     initLoginPage();
   </script>
